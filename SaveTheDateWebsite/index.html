@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Or & Tamar Wedding - Save the Date</title>
+<style>
+@font-face {
+  font-family: dateFont;
+  src: url(Demo_ConeriaScript.ttf);
+}
+@font-face {
+  font-family: curlyFont;
+  src: url(Raphtalia-2ZmK.ttf);
+}
+body {
+  text-align: center;
+  color: whitesmoke;
+  font-size: 5vh;
+  background-image: linear-gradient(
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0.5)
+    ), url("background.jpg");
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;  
+}
+h1.main_title, h2.main_title {
+    font-weight: lighter;
+    line-height: 0.6em;
+    font-family: curlyFont;
+}
+span.gold_text {
+    color: goldenrod;
+    font-weight: normal;
+}
+span.yellow_text {
+    color: goldenrod;
+}
+h2.date_title, p.date_title {
+    font-family: dateFont;
+    font-size: 6vh;
+    font-weight: bolder;
+}
+hr.rounded {
+  border-top: 0.5vh solid goldenrod;
+  border-radius: 5px;
+}
+a.calendar_button {
+    background-color: goldenrod;
+    font-size: 4vh;
+    font-family: curlyFont;
+    font-weight: normal;
+    text-decoration: none;
+    padding: 2vh 3vw;
+    color: whitesmoke;
+    border-radius: 2vh;
+    display:inline-block;
+    mso-padding-alt:0;
+    box-shadow:0 0.2vh 0.4vw rgba(0,0,0,.2);
+}
+img.ring_image {
+    height: 20vh;
+}
+</style>
+</head>
+<body>
+<h1 class="main_title">Or <span class="gold_text">&</span> Tamar</h1>
+<h2 class="main_title">Are getting married!</h2>
+<hr class="rounded" style="width:40%;  border-radius: 5px;">
+<h2 class="date_title">10<span class="gold_text">/</span>10<span class="gold_text">/</span>2021<br/><span>Save the Date</span></h2>
+<p class="date_title" id="timer"></p>
+<a class="calendar_button" href="https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20211010T160000Z%2F20211010T205900Z&location=בית%20-%20חלל%20אירועים%20אורבני,%20התעשייה%2010,%20רעננה,%20ישראל&text=החתונה%20של%20אור%20ותמר">Add to your Google Calendar</a>                         
+<br/><img class="ring_image" src="ring.png"></img>
+</body>
+<script>
+    // Set the date we're counting down to
+    var countDownDate = new Date("Oct 10, 2021 19:00:00").getTime();
+    
+    // Update the count down every 1 second
+    function update_timer() {
+    
+        // Get today's date and time
+        var now = new Date().getTime();
+    
+        // Find the distance between now and the count down date
+        var distance = countDownDate - now;
+    
+        // Time calculations for days, hours, minutes and seconds
+        var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    
+        // Display the result in the element with id="timer"
+        document.getElementById("timer").innerHTML = days + "<span class=\"gold_text\">d</span> " + hours + "<span class=\"gold_text\">h</span> "
+        + minutes + "<span class=\"gold_text\">m</span> " + seconds + "<span class=\"gold_text\">s</span> ";
+    
+        // If the count down is finished, write some text
+        if (distance < 0) {
+        clearInterval(x);
+        document.getElementById("timer").innerHTML = "PARTY!";
+        }
+    }
+    update_timer();
+    var x = setInterval(update_timer, 1000);
+</script>
+</html>

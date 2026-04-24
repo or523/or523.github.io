@@ -74,8 +74,9 @@
     }
     tr:nth-child(even) td { background: #fafaf8; }
 
-    /* Numeric columns — keep LTR so digits align naturally */
-    td:first-child { direction: ltr; text-align: center; }
+    /* Kramdown injects style="text-align: left" for :--- columns; in RTL that
+       pushes Hebrew text to the wrong edge — override to right-align. */
+    td[style*="left"], th[style*="left"] { text-align: right !important; }
 
     /* Code & pre */
     code {

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>שרשרת הגימטריה — אינטראקטיבי</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Heebo', 'Arial Hebrew', Arial, sans-serif;
+      background: #f7f7f5;
+      color: #1a1a1a;
+      font-size: 17px;
+      line-height: 1.7;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Top bar */
+    .top-bar {
+      background: #1a1a2e;
+      color: #ccc;
+      font-size: 0.82rem;
+      padding: 10px 48px;
+      letter-spacing: 0.02em;
+    }
+    .top-bar a { color: #9ab0d0; text-decoration: none; }
+    .top-bar a:hover { text-decoration: underline; }
+    .top-bar-sep { margin: 0 5px; color: #555; }
+
+    /* Container */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 44px 48px 80px;
+      min-height: 100vh;
+      box-shadow: 0 0 40px rgba(0,0,0,0.06);
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111;
+      margin: 0 0 0.2em;
+    }
+    .subtitle {
+      color: #555;
+      font-size: 0.95rem;
+      margin: 0 0 28px;
+      line-height: 1.6;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 32px;
+      padding: 16px 20px;
+      background: #f7f7f5;
+      border-radius: 10px;
+      border: 1px solid #e8e8e8;
+    }
+    #chain-input {
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 8px 14px;
+      border: 1.5px solid #ccc;
+      border-radius: 7px;
+      width: 170px;
+      direction: ltr;
+      text-align: left;
+    }
+    #chain-input:focus {
+      outline: none;
+      border-color: #4a7adb;
+      box-shadow: 0 0 0 3px rgba(74,122,219,0.15);
+    }
+    button {
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 8px 20px;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    #btn-add  { background: #1a1a2e; color: #fff; }
+    #btn-add:hover  { background: #2c2c4e; }
+    #btn-add:active { transform: scale(0.97); }
+    #btn-clear { background: transparent; color: #666; border: 1.5px solid #ccc; }
+    #btn-clear:hover { background: #f0f0f0; }
+    .error-msg {
+      color: #c0392b;
+      font-size: 0.88rem;
+      flex-basis: 100%;
+      min-height: 1.2em;
+    }
+
+    /* Chains area */
+    .chains-area {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      align-items: flex-start;
+      overflow-x: auto;
+      padding-bottom: 24px;
+    }
+    .chains-area:empty::after {
+      content: 'הכנס מספר למעלה כדי להתחיל';
+      color: #aaa;
+      font-size: 0.92rem;
+      padding: 24px 0;
+      display: block;
+    }
+
+    /* Chain column */
+    .chain-col {
+      min-width: 210px;
+      max-width: 265px;
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .chain-col__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .chain-col__start-num {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .chain-col__id-badge {
+      font-size: 0.72rem;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-weight: 600;
+    }
+    .chain-col__body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Step cards */
+    .step-card {
+      border-radius: 8px;
+      padding: 9px 12px;
+      opacity: 0;
+      transform: translateY(-6px);
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .step-card--visible {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+    .step-card--tail {
+      background: #fff;
+      border: 1.5px solid #e8e8e8;
+      border-right: 4px solid var(--accent);
+    }
+    .step-card--cycle {
+      background: var(--cycle-bg, #f0f4ff);
+      border: 1.5px solid var(--accent);
+      border-right: 4px solid var(--accent);
+    }
+    .step-card--shared {
+      outline: 2px dashed var(--accent);
+      outline-offset: 2px;
+    }
+    .step-card__number {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #111;
+      direction: ltr;
+      text-align: right;
+    }
+    .step-card__hebrew {
+      font-size: 0.87rem;
+      color: #444;
+      margin-top: 2px;
+    }
+    .step-card__gematria {
+      font-size: 0.77rem;
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: 3px;
+      direction: ltr;
+      text-align: right;
+    }
+    .step-card__merge-badges { margin-top: 5px; }
+    .step-card__merge-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      background: rgba(0,0,0,0.06);
+      border-radius: 20px;
+      padding: 2px 8px;
+      margin-top: 2px;
+      color: #555;
+    }
+
+    /* Collapse zone */
+    .step-card--hidden,
+    .step-arrow--hidden { display: none; }
+    .chain-col--expanded .step-card--hidden { display: block; }
+    .chain-col--expanded .step-arrow--hidden { display: block; }
+
+    /* Arrows */
+    .step-arrow {
+      text-align: center;
+      color: #bbb;
+      font-size: 1rem;
+      line-height: 1;
+      margin: 3px 0;
+      user-select: none;
+      opacity: 0;
+      transition: opacity 0.22s ease;
+    }
+    .step-arrow--visible { opacity: 1 !important; }
+
+    /* Cycle label divider */
+    .cycle-label {
+      text-align: center;
+      font-size: 0.73rem;
+      color: #999;
+      border-top: 1px dashed #ddd;
+      padding-top: 7px;
+      margin: 8px 0 6px;
+    }
+
+    /* Collapse button */
+    .chain-col__collapse-btn {
+      display: block;
+      width: 100%;
+      background: none;
+      border: 1px dashed #ccc;
+      border-radius: 7px;
+      color: #888;
+      font-size: 0.8rem;
+      font-family: inherit;
+      font-weight: 400;
+      padding: 5px 10px;
+      cursor: pointer;
+      margin: 4px 0;
+      text-align: center;
+      transition: background 0.15s;
+    }
+    .chain-col__collapse-btn:hover { background: #f5f5f5; }
+
+    /* Loop-back footer */
+    .chain-col__loop-back {
+      text-align: center;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.88rem;
+      border-top: 2px solid var(--accent);
+      padding-top: 8px;
+      margin-top: 4px;
+      direction: ltr;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .container  { padding: 24px 16px 60px; }
+      .top-bar    { padding: 10px 16px; }
+      h1          { font-size: 1.6rem; }
+      .chain-col  { min-width: 185px; max-width: 240px; }
+      #chain-input { width: 140px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="/">or523.github.io</a>
+  <span class="top-bar-sep">/</span>
+  <a href="index.html">שרשרת הגימטריה</a>
+</div>
+
+<div class="container">
+  <h1>שרשרת הגימטריה — אינטראקטיבי</h1>
+  <p class="subtitle">הכנס מספר וצפה כיצד השרשרת נוצרת — כל מספר הופך לשמו בעברית, הגימטריה שלו הופכת למספר הבא, וחוזר חלילה עד שנכנסים ללולאה. אפשר להוסיף מספר שרשראות ולגלות היכן הן מתמזגות.</p>
+
+  <div class="controls">
+    <input type="number" id="chain-input" min="1" max="999999"
+           placeholder="1 – 999,999" dir="ltr" autocomplete="off">
+    <button id="btn-add">הוסף שרשרת</button>
+    <button id="btn-clear">נקה הכל</button>
+    <div id="error-msg" class="error-msg" role="alert" aria-live="polite"></div>
+  </div>
+
+  <div id="chains-area" class="chains-area"></div>
+</div>
+
+<script>
+// ── Gematria lookup ────────────────────────────────────────────────────────────
+const G = {
+  'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,
+  'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,
+  'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400
+};
+
+// ── Hebrew word tables ─────────────────────────────────────────────────────────
+const UNITS = {1:'אחת',2:'שתיים',3:'שלוש',4:'ארבע',5:'חמש',6:'שש',7:'שבע',8:'שמונה',9:'תשע'};
+const TENS  = {10:'עשר',20:'עשרים',30:'שלושים',40:'ארבעים',50:'חמישים',
+               60:'שישים',70:'שבעים',80:'שמונים',90:'תשעים'};
+const HUNDREDS = {
+  100:'מאה',200:'מאתיים',300:'שלוש מאות',400:'ארבע מאות',500:'חמש מאות',
+  600:'שש מאות',700:'שבע מאות',800:'שמונה מאות',900:'תשע מאות'
+};
+const TH = {
+  1000:'אלף',2000:'אלפיים',3000:'שלושת אלפים',4000:'ארבעת אלפים',
+  5000:'חמשת אלפים',6000:'ששת אלפים',7000:'שבעת אלפים',
+  8000:'שמונת אלפים',9000:'תשעת אלפים',10000:'עשרת אלפים'
+};
+
+// ── Number → Hebrew ────────────────────────────────────────────────────────────
+function joinParts(parts) {
+  if (!parts.length) return '';
+  if (parts.length === 1) return parts[0];
+  const last = parts[parts.length - 1];
+  const rest = parts.slice(0, -1).join(' ');
+  return last.includes(' ו') ? rest + ' ' + last : rest + ' ו' + last;
+}
+
+function below1000(n) {
+  const parts = [];
+  if (n >= 100) { parts.push(HUNDREDS[Math.floor(n / 100) * 100]); n %= 100; }
+  if (n >= 20) {
+    const t = Math.floor(n / 10), u = n % 10;
+    parts.push(TENS[t * 10] + (u ? ' ו' + UNITS[u] : ''));
+  } else if (n === 10) { parts.push(TENS[10]); }
+    else if (n >= 11)  { parts.push(UNITS[n - 10] + ' עשרה'); }
+    else if (n >= 1)   { parts.push(UNITS[n]); }
+  return joinParts(parts);
+}
+
+function numHeb(n) {
+  const parts = [];
+  if (n >= 1000) {
+    const k = Math.floor(n / 1000); n %= 1000;
+    if (k <= 10)       parts.push(TH[k * 1000]);
+    else if (k <= 19)  parts.push(UNITS[k - 10] + ' עשרה אלף');
+    else               parts.push(below1000(k) + ' אלף');
+  }
+  if (n > 0) parts.push(below1000(n));
+  return joinParts(parts);
+}
+
+function gem(text) {
+  return [...text].reduce((s, ch) => s + (G[ch] || 0), 0);
+}
+
+// ── Cycle identification ───────────────────────────────────────────────────────
+const KNOWN_CYCLES = [
+  new Set([1682, 2370]),
+  new Set([1596, 2332, 2706]),
+  new Set([1295, 1786, 1982, 2540]),
+  new Set([1305, 1548, 1636, 2450]),
+  new Set([813, 2065, 1185, 957, 2003])
+];
+const getCycleId = n => KNOWN_CYCLES.findIndex(s => s.has(n));
+
+// ── Chain building ─────────────────────────────────────────────────────────────
+function buildChain(start) {
+  const steps = [], seen = new Map();
+  let cur = start;
+  while (!seen.has(cur)) {
+    seen.set(cur, steps.length);
+    const h = numHeb(cur), g = gem(h);
+    steps.push({ number: cur, hebrew: h, gematria: g, isCycle: false, mergedWith: [] });
+    cur = g;
+  }
+  const csi = seen.get(cur);
+  for (let i = csi; i < steps.length; i++) steps[i].isCycle = true;
+  return {
+    start, steps,
+    cycleStartIndex: csi,
+    cycleEntry: cur,
+    cycleId: getCycleId(cur),
+    colorIdx: 0, id: 0, alreadyAnimated: false
+  };
+}
+
+// ── App state ──────────────────────────────────────────────────────────────────
+const COLORS    = ['#4a7adb','#2e9e6b','#d04f4f','#c87f20','#7c4dab','#1d9fa8'];
+const CYCLE_BG  = ['#e8f0fe','#e6f4ea','#fce8e6','#fff3e0','#f3e8fd'];
+
+const st = { chains: [], nextColor: 0, nextId: 1 };
+
+function computeMerges() {
+  const map = new Map();
+  for (const c of st.chains)
+    for (const s of c.steps) {
+      if (!map.has(s.number)) map.set(s.number, new Set());
+      map.get(s.number).add(c.id);
+    }
+  for (const c of st.chains)
+    for (const s of c.steps)
+      s.mergedWith = [...map.get(s.number)].filter(id => id !== c.id);
+}
+
+// ── Rendering ─────────────────────────────────────────────────────────────────
+const fmt = n => n.toLocaleString('en-US');
+
+function renderAllChains() {
+  const area = document.getElementById('chains-area');
+  area.innerHTML = '';
+  for (const chain of st.chains) {
+    const col = renderChain(chain);
+    area.appendChild(col);
+    if (!chain.alreadyAnimated) {
+      animateIn(col);
+      chain.alreadyAnimated = true;
+    }
+  }
+}
+
+function renderChain(chain) {
+  const col = document.createElement('div');
+  col.className = 'chain-col';
+  col.dataset.chainId = chain.id;
+  col.style.setProperty('--accent',    COLORS[chain.colorIdx]);
+  col.style.setProperty('--cycle-bg',  CYCLE_BG[chain.cycleId] ?? '#f0f4ff');
+
+  // Header
+  col.insertAdjacentHTML('beforeend', `
+    <div class="chain-col__header">
+      <span class="chain-col__start-num">${fmt(chain.start)}</span>
+      <span class="chain-col__id-badge">שרשרת ${chain.id}</span>
+    </div>`);
+
+  const body = document.createElement('div');
+  body.className = 'chain-col__body';
+
+  const { steps, cycleStartIndex: csi, alreadyAnimated: wasAnimated } = chain;
+  const SHOW_FIRST = 5;
+  const longTail   = csi > 12;
+  let collapseCount = 0;
+  let collapseBtn   = null;
+
+  for (let i = 0; i < steps.length; i++) {
+    const s = steps[i];
+
+    // Cycle divider label
+    if (i === csi) {
+      const lbl = document.createElement('div');
+      lbl.className = 'cycle-label';
+      lbl.textContent = '— כניסה ללולאה —';
+      body.appendChild(lbl);
+    }
+
+    // Card
+    const card = document.createElement('div');
+    card.className = 'step-card ' + (s.isCycle ? 'step-card--cycle' : 'step-card--tail');
+    card.dataset.stepIdx = i;
+
+    const inCollapseZone = longTail && !s.isCycle && i >= SHOW_FIRST && i < csi;
+    if (inCollapseZone) { card.classList.add('step-card--hidden'); collapseCount++; }
+    if (s.mergedWith.length) card.classList.add('step-card--shared');
+
+    if (wasAnimated) {
+      card.classList.add('step-card--visible');
+      card.style.transition = 'none';
+    }
+
+    const badges = s.mergedWith
+      .map(id => `<span class="step-card__merge-badge">גם שרשרת ${id} מגיעה לכאן</span>`)
+      .join('');
+
+    card.innerHTML = `
+      <div class="step-card__number">${fmt(s.number)}</div>
+      <div class="step-card__hebrew">${s.hebrew}</div>
+      <div class="step-card__gematria">= ${fmt(s.gematria)}</div>
+      ${badges ? `<div class="step-card__merge-badges">${badges}</div>` : ''}`;
+
+    body.appendChild(card);
+
+    // Insert collapse button after the SHOW_FIRST-th card
+    if (longTail && !collapseBtn && i === SHOW_FIRST - 1) {
+      collapseBtn = document.createElement('button');
+      collapseBtn.className = 'chain-col__collapse-btn';
+      collapseBtn.addEventListener('click',
+        () => toggleCollapse(col, collapseBtn, csi, SHOW_FIRST));
+      body.appendChild(collapseBtn);
+    }
+
+    // Arrow after this card (not after the last)
+    if (i < steps.length - 1) {
+      const arrow = document.createElement('div');
+      arrow.className = 'step-arrow';
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.textContent = '↓';
+      arrow.dataset.afterIdx = i;
+
+      // Hide arrows in the collapse zone (from after SHOW_FIRST-1 up to before cycle)
+      if (longTail && i >= SHOW_FIRST - 1 && i < csi - 1)
+        arrow.classList.add('step-arrow--hidden');
+
+      if (wasAnimated) {
+        arrow.classList.add('step-arrow--visible');
+        arrow.style.transition = 'none';
+      }
+      body.appendChild(arrow);
+    }
+  }
+
+  if (collapseBtn) collapseBtn.textContent = `הצג עוד ${collapseCount} צעדים`;
+
+  col.appendChild(body);
+
+  // Loop-back footer
+  col.insertAdjacentHTML('beforeend', `
+    <div class="chain-col__loop-back">↺ חוזר ל-<strong>${fmt(chain.cycleEntry)}</strong></div>`);
+
+  return col;
+}
+
+function toggleCollapse(col, btn, csi, showFirst) {
+  const expanded = col.classList.toggle('chain-col--expanded');
+  if (expanded) {
+    btn.textContent = 'הצג פחות';
+    // Animate in cards that haven't been revealed yet
+    const toReveal = [
+      ...col.querySelectorAll('.step-card--hidden:not(.step-card--visible)'),
+      ...col.querySelectorAll('.step-arrow--hidden:not(.step-arrow--visible)')
+    ];
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      toReveal.forEach((el, i) => {
+        el.style.transitionDelay = `${i * 50}ms`;
+        el.classList.add('step-card--visible', 'step-arrow--visible');
+      });
+    }));
+  } else {
+    btn.textContent = `הצג עוד ${csi - showFirst} צעדים`;
+  }
+}
+
+function animateIn(col) {
+  const cards  = col.querySelectorAll('.step-card:not(.step-card--hidden)');
+  const arrows = col.querySelectorAll('.step-arrow:not(.step-arrow--hidden)');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    cards.forEach((el, i) => {
+      el.style.transitionDelay = `${i * 120}ms`;
+      el.classList.add('step-card--visible');
+    });
+    arrows.forEach((el, i) => {
+      el.style.transitionDelay = `${i * 120 + 60}ms`;
+      el.classList.add('step-arrow--visible');
+    });
+  }));
+}
+
+// ── Input handlers ─────────────────────────────────────────────────────────────
+function addChain() {
+  const inp   = document.getElementById('chain-input');
+  const errEl = document.getElementById('error-msg');
+  errEl.textContent = '';
+
+  const n = parseInt(inp.value, 10);
+  if (!inp.value.trim() || isNaN(n) || n < 1 || n > 999999) {
+    errEl.textContent = 'נא להזין מספר שלם בין 1 ל-999,999';
+    return;
+  }
+  if (st.chains.some(c => c.start === n)) {
+    errEl.textContent = 'שרשרת ממספר זה כבר מוצגת';
+    return;
+  }
+
+  const chain    = buildChain(n);
+  chain.id       = st.nextId++;
+  chain.colorIdx = st.nextColor % COLORS.length;
+  st.nextColor++;
+  st.chains.push(chain);
+
+  computeMerges();
+  renderAllChains();
+  inp.value = '';
+  inp.focus();
+}
+
+function clearAll() {
+  st.chains     = [];
+  st.nextColor  = 0;
+  st.nextId     = 1;
+  document.getElementById('chains-area').innerHTML = '';
+  document.getElementById('error-msg').textContent = '';
+}
+
+document.getElementById('btn-add').addEventListener('click', addChain);
+document.getElementById('btn-clear').addEventListener('click', clearAll);
+document.getElementById('chain-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addChain();
+});
+</script>
+
+</body>
+</html>

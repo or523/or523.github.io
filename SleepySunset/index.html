@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Sleepy Sunset Runner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #0a0a1e;
+      overflow: hidden;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    #gameCanvas {
+      display: block;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      image-rendering: pixelated;
+    }
+  </style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<script>
+// ─── Constants ────────────────────────────────────────────────────────────────
+const LW = 480, LH = 800;          // logical canvas dimensions
+const GROUND_Y = LH * 0.80;        // ground line in logical px
+
+const CFG = {
+  // Physics
+  GRAVITY:          2600,
+  JUMP_VEL:         -870,
+  DOUBLE_JUMP_VEL:  -720,
+  // Speed
+  SPEED_INIT:  300,
+  SPEED_MAX:   720,
+  SPEED_RAMP:  20,               // px/s added each real second
+  // Player
+  PLAYER_X:    LW * 0.22,
+  // Obstacles
+  OBS_INTERVAL_MIN: 1.3,
+  OBS_INTERVAL_MAX: 2.6,
+  OBS_INTERVAL_SCALE: 0.60,      // how much interval shrinks at max speed
+  // Firefly
+  FIREFLY_CHANCE:  0.35,
+  FIREFLY_PULSE:   2.2,
+  // Sky
+  SKY_PHASE_RATE:  0.022,        // phase/s → full night ~45s
+  STAR_START:      0.40,
+  MOON_START:      0.50,
+  // Juice
+  SHAKE_DUR:  0.35,
+  SHAKE_MAG:  12,
+  SPEEDLINE_THRESH: 540,
+  SPEEDLINE_COUNT:  20,
+  // Parallax
+  PAR_MOUNT:  0.14,
+  PAR_TREE:   0.38,
+  PAR_DETAIL: 0.82,
+};
+
+// ─── Canvas ───────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+let scale = 1;
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  const vw  = window.innerWidth;
+  const vh  = window.innerHeight;
+  const cssH = vh;
+  const cssW = Math.min(vw, vh * (LW / LH));
+  canvas.style.width  = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  canvas.width  = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  scale = (cssH / LH) * dpr;
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+resize();
+
+// ─── Colours & Sky ────────────────────────────────────────────────────────────
+function hexRgb(h) {
+  return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+}
+function lerp(a, b, t) { return a + (b - a) * t; }
+function lerpRgb(a, b, t) {
+  return [Math.round(lerp(a[0],b[0],t)), Math.round(lerp(a[1],b[1],t)), Math.round(lerp(a[2],b[2],t))];
+}
+function rgba(c, a) { return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+
+const SKY_KF = [
+  { t:0.00, top:'#FF9A3C', bot:'#FFD166', hor:'#FF6835' },
+  { t:0.25, top:'#E8533F', bot:'#FF9A3C', hor:'#C43300' },
+  { t:0.50, top:'#7B2D8B', bot:'#E8533F', hor:'#5A1870' },
+  { t:0.75, top:'#1A1A4E', bot:'#7B2D8B', hor:'#0D0D3A' },
+  { t:1.00, top:'#0A0A1E', bot:'#1A1A4E', hor:'#05051A' },
+];
+
+function getSkyColors(ph) {
+  let a = SKY_KF[0], b = SKY_KF[SKY_KF.length - 1];
+  for (let i = 0; i < SKY_KF.length - 1; i++) {
+    if (ph >= SKY_KF[i].t && ph <= SKY_KF[i+1].t) { a = SKY_KF[i]; b = SKY_KF[i+1]; break; }
+  }
+  const f = (ph - a.t) / ((b.t - a.t) || 1);
+  return {
+    top: lerpRgb(hexRgb(a.top), hexRgb(b.top), f),
+    bot: lerpRgb(hexRgb(a.bot), hexRgb(b.bot), f),
+    hor: lerpRgb(hexRgb(a.hor), hexRgb(b.hor), f),
+  };
+}
+
+const MOUNT_COLS = [
+  { t:0.00, c:'#C06030' }, { t:0.35, c:'#6B2060' },
+  { t:0.65, c:'#2A1840' }, { t:1.00, c:'#1A1030' },
+];
+const TREE_COLS = [
+  { t:0.00, c:'#3D1A0A' }, { t:0.40, c:'#1E0A30' },
+  { t:1.00, c:'#100818' },
+];
+function interpCol(kf, ph) {
+  let a = kf[0], b = kf[kf.length - 1];
+  for (let i = 0; i < kf.length - 1; i++) {
+    if (ph >= kf[i].t && ph <= kf[i+1].t) { a = kf[i]; b = kf[i+1]; break; }
+  }
+  const f = (ph - a.t) / ((b.t - a.t) || 1);
+  return lerpRgb(hexRgb(a.c), hexRgb(b.c), f);
+}
+
+// ─── Seeded RNG (for consistent world generation) ─────────────────────────────
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rng = mulberry32(0xDEADBEEF);
+
+// ─── Mountain path (pre-generated) ───────────────────────────────────────────
+const MOUNT_W = LW * 2;
+const mountPoints = (() => {
+  const pts = [];
+  let x = 0;
+  while (x < MOUNT_W + 50) {
+    const peakH = 80 + rng() * 120;
+    const w     = 100 + rng() * 140;
+    pts.push({ cx: x + w / 2, cy: GROUND_Y - peakH, w });
+    x += w + 20 + rng() * 40;
+  }
+  return pts;
+})();
+
+function drawMountainPath(ctx, ox) {
+  const off = ((ox % MOUNT_W) + MOUNT_W) % MOUNT_W;
+  for (let rep = 0; rep < 2; rep++) {
+    const shift = -off + rep * MOUNT_W;
+    ctx.beginPath();
+    ctx.moveTo(shift, GROUND_Y);
+    for (const p of mountPoints) {
+      const x = p.cx + shift;
+      ctx.quadraticCurveTo(x - p.w / 2, GROUND_Y, x, p.cy);
+      ctx.quadraticCurveTo(x + p.w / 2, GROUND_Y, x + p.w / 2, GROUND_Y);
+    }
+    ctx.lineTo(shift + MOUNT_W, GROUND_Y);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+// ─── Tree silhouettes (pre-generated) ─────────────────────────────────────────
+const TREE_W = LW * 2;
+const treeData = (() => {
+  const trees = [];
+  let x = rng() * 60;
+  while (x < TREE_W) {
+    const h = 70 + rng() * 90;
+    const w = 24 + rng() * 30;
+    const type = rng() < 0.55 ? 0 : 1; // 0=pine, 1=round
+    trees.push({ x, h, w, type });
+    x += w + 20 + rng() * 60;
+  }
+  return trees;
+})();
+
+function drawTrees(ctx, ox) {
+  const off = ((ox % TREE_W) + TREE_W) % TREE_W;
+  for (let rep = 0; rep < 2; rep++) {
+    const shift = -off + rep * TREE_W;
+    for (const t of treeData) {
+      const bx = t.x + shift;
+      const by = GROUND_Y;
+      ctx.beginPath();
+      if (t.type === 0) {
+        // Pine: triangle stack
+        const tiers = 3;
+        for (let i = 0; i < tiers; i++) {
+          const ty  = by - (i + 1) * (t.h / tiers);
+          const tw  = t.w * (1 - i * 0.25);
+          ctx.moveTo(bx, ty);
+          ctx.lineTo(bx - tw / 2, by - i * (t.h / tiers));
+          ctx.lineTo(bx + tw / 2, by - i * (t.h / tiers));
+          ctx.closePath();
+        }
+      } else {
+        // Round oak: trunk + blob
+        const trunkW = t.w * 0.18;
+        const trunkH = t.h * 0.4;
+        ctx.rect(bx - trunkW / 2, by - trunkH, trunkW, trunkH);
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.ellipse(bx, by - trunkH - t.h * 0.3, t.w * 0.55, t.h * 0.38, 0, 0, Math.PI * 2);
+        ctx.ellipse(bx - t.w * 0.3, by - trunkH - t.h * 0.2, t.w * 0.38, t.h * 0.28, 0, 0, Math.PI * 2);
+        ctx.ellipse(bx + t.w * 0.3, by - trunkH - t.h * 0.18, t.w * 0.38, t.h * 0.26, 0, 0, Math.PI * 2);
+      }
+      ctx.fill();
+    }
+  }
+}
+
+// ─── Ground detail tufts (pre-generated) ──────────────────────────────────────
+const TUFT_W = LW * 2;
+const tuftData = (() => {
+  const tufts = [];
+  let x = rng() * 20;
+  while (x < TUFT_W) {
+    const count = 2 + Math.floor(rng() * 3);
+    const h = 6 + rng() * 10;
+    tufts.push({ x, h, count });
+    x += 12 + rng() * 40;
+  }
+  return tufts;
+})();
+
+function drawGroundDetail(ctx, ox) {
+  const off = ((ox % TUFT_W) + TUFT_W) % TUFT_W;
+  for (let rep = 0; rep < 2; rep++) {
+    const shift = -off + rep * TUFT_W;
+    for (const t of tuftData) {
+      const bx = t.x + shift;
+      ctx.beginPath();
+      for (let i = 0; i < t.count; i++) {
+        const sx = bx + i * 5 - (t.count * 5) / 2;
+        ctx.moveTo(sx, GROUND_Y);
+        ctx.lineTo(sx + 2, GROUND_Y - t.h);
+        ctx.lineTo(sx + 4, GROUND_Y);
+      }
+      ctx.fill();
+    }
+  }
+}
+
+// ─── Stars ────────────────────────────────────────────────────────────────────
+const STARS = Array.from({ length: 70 }, () => ({
+  x: Math.random() * LW,
+  y: Math.random() * GROUND_Y * 0.65,
+  r: 0.7 + Math.random() * 1.8,
+  phase: Math.random() * Math.PI * 2,
+  speed: 1.4 + Math.random() * 2.2,
+}));
+
+// ─── Speed lines (pre-generated offsets) ──────────────────────────────────────
+const SPEED_LINES = Array.from({ length: CFG.SPEEDLINE_COUNT }, (_, i) => ({
+  y:   (i / CFG.SPEEDLINE_COUNT) * (GROUND_Y - 30) + 10,
+  len: 35 + Math.random() * 55,
+  x:   Math.random() * LW,
+}));
+
+// ─── Game state ───────────────────────────────────────────────────────────────
+let state      = 'MENU'; // MENU | PLAYING | DEAD
+let playTime   = 0;
+let gameTime   = 0;      // total elapsed for animations
+let score      = 0;
+let fireCount  = 0;
+let isNewBest  = false;
+let gameSpeed  = CFG.SPEED_INIT;
+let skyPhase   = 0;
+let fontReady  = false;
+
+// Parallax offsets
+let mountOff  = 0;
+let treeOff   = 0;
+let detailOff = 0;
+
+// Player
+let pY        = GROUND_Y;
+let pVY       = 0;
+let onGround  = true;
+let jumpsLeft = 2;
+let squashT   = 0;
+
+// Obstacles + fireflies + particles
+let obstacles = [];
+let fireflies = [];
+let particles = [];
+
+// Spawn timers
+let nextObs   = CFG.OBS_INTERVAL_MAX;
+let sinceObs  = 0;
+
+// Juice
+let shakeT  = 0;
+let shakeX  = 0, shakeY = 0;
+let deathFlash = 0;
+
+// Moon
+let moonProg = 0;
+
+// High score
+const HS_KEY = 'sleepySunsetRunner_hs';
+let highScore = parseInt(localStorage.getItem(HS_KEY) || '0', 10);
+
+// ─── Obstacle helpers ─────────────────────────────────────────────────────────
+const OBS_DEFS = [
+  { w: 44, h: 36 },  // 0: boulder
+  { w: 66, h: 26 },  // 1: log
+  { w: 34, h: 56 },  // 2: bramble (tall)
+];
+
+function obsType(pt) {
+  const r = Math.random();
+  if (pt < 10) return r < 0.5 ? 0 : 1;
+  if (pt < 20) return Math.floor(r * 3);
+  return r < 0.4 ? 2 : (r < 0.7 ? 0 : 1);
+}
+
+function spawnObs() {
+  const type = obsType(playTime);
+  const def  = OBS_DEFS[type];
+  obstacles.push({ type, x: LW + 30, y: GROUND_Y - def.h, w: def.w, h: def.h });
+  if (Math.random() < CFG.FIREFLY_CHANCE) spawnFirefly();
+}
+
+function spawnFirefly() {
+  fireflies.push({
+    x:     LW + 60 + Math.random() * 80,
+    y:     GROUND_Y - 120 - Math.random() * 100,
+    phase: Math.random() * Math.PI * 2,
+    baseY: 0,
+  });
+  fireflies[fireflies.length - 1].baseY = fireflies[fireflies.length - 1].y;
+}
+
+// ─── Particles ────────────────────────────────────────────────────────────────
+function burst(x, y, n, colors, speedMin, speedMax) {
+  for (let i = 0; i < n; i++) {
+    const angle = (i / n) * Math.PI * 2 + Math.random() * 0.4;
+    const spd   = speedMin + Math.random() * (speedMax - speedMin);
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd - 50,
+      life: 1,
+      decay: 1.4 + Math.random() * 1.0,
+      r: 2.5 + Math.random() * 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    });
+  }
+}
+
+// ─── Draw helpers ─────────────────────────────────────────────────────────────
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// ─── Draw bunny ───────────────────────────────────────────────────────────────
+function drawBunny(cx, cy, legAnim, scX, scY) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scX || 1, scY || 1);
+  ctx.fillStyle = '#080810';
+  ctx.beginPath();
+
+  // body
+  ctx.ellipse(0, -28, 18, 22, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // head
+  ctx.beginPath();
+  ctx.arc(4, -56, 16, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ears
+  ctx.beginPath();
+  ctx.ellipse(-3, -78, 4.5, 14, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(10, -76, 4, 13, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // tail
+  ctx.beginPath();
+  ctx.arc(20, -22, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // legs (animated)
+  const la = legAnim || 0;
+  const frontAngle = Math.sin(la) * 0.45;
+  const backAngle  = Math.sin(la + Math.PI) * 0.45;
+
+  function leg(ox, angle) {
+    ctx.save();
+    ctx.translate(ox, -10);
+    ctx.rotate(angle);
+    roundRect(ctx, -4, 0, 8, 18, 3);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.beginPath();
+  leg(-8, frontAngle);
+  leg(8,  backAngle);
+
+  ctx.restore();
+}
+
+// ─── Draw obstacle ────────────────────────────────────────────────────────────
+function drawObs(o, col) {
+  ctx.fillStyle = col;
+  const cx = o.x + o.w / 2;
+  const by = o.y + o.h;
+  if (o.type === 0) {
+    // Boulder: jagged polygon
+    ctx.beginPath();
+    const pts = 7;
+    for (let i = 0; i < pts; i++) {
+      const a = (i / pts) * Math.PI * 2 - Math.PI / 2;
+      const noise = 0.75 + (i % 3) * 0.15;
+      const rx = o.w * 0.5 * noise;
+      const ry = o.h * 0.5 * noise;
+      const px = cx + Math.cos(a) * rx;
+      const py = (o.y + o.h / 2) + Math.sin(a) * ry;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+  } else if (o.type === 1) {
+    // Log: rounded rectangle
+    roundRect(ctx, o.x, o.y, o.w, o.h, 6);
+    ctx.fill();
+    // End grain circles
+    ctx.beginPath();
+    ctx.ellipse(o.x + 7, by - o.h / 2, 7, o.h / 2 - 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(o.x + o.w - 7, by - o.h / 2, 7, o.h / 2 - 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // Bramble: cluster of spiky ellipses
+    const blobs = [
+      { ox: 0, oy: -o.h * 0.5, rx: o.w * 0.45, ry: o.h * 0.28 },
+      { ox: -o.w * 0.28, oy: -o.h * 0.3, rx: o.w * 0.32, ry: o.h * 0.22 },
+      { ox:  o.w * 0.28, oy: -o.h * 0.3, rx: o.w * 0.30, ry: o.h * 0.20 },
+      { ox: 0, oy: -o.h * 0.75, rx: o.w * 0.30, ry: o.h * 0.20 },
+      { ox: 0, oy: -o.h * 0.12, rx: o.w * 0.42, ry: o.h * 0.16 },
+    ];
+    for (const b of blobs) {
+      ctx.beginPath();
+      ctx.ellipse(cx + b.ox, by + b.oy, b.rx, b.ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Spikes
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const bx2 = cx + Math.cos(a) * o.w * 0.46;
+      const spy = by - o.h * 0.5 + Math.sin(a) * o.h * 0.34;
+      const tipX = cx + Math.cos(a) * o.w * 0.62;
+      const tipY = by - o.h * 0.5 + Math.sin(a) * o.h * 0.50;
+      ctx.moveTo(bx2 - 2, spy);
+      ctx.lineTo(tipX, tipY);
+      ctx.lineTo(bx2 + 2, spy);
+    }
+    ctx.fill();
+  }
+}
+
+// ─── Draw moon ────────────────────────────────────────────────────────────────
+function drawMoon(ctx, mp, sky) {
+  if (mp <= 0) return;
+  const mx = LW * 0.78 - mp * LW * 0.18;
+  const my = GROUND_Y * (1 - mp * mp * 0.88);
+  const radius = 18 + mp * 10;
+  const alpha = Math.min(1, mp * 3);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // Halo
+  const halo = ctx.createRadialGradient(mx, my, radius * 0.7, mx, my, radius * 3.5);
+  halo.addColorStop(0,   'rgba(255,245,200,0.25)');
+  halo.addColorStop(1,   'rgba(255,245,200,0)');
+  ctx.fillStyle = halo;
+  ctx.beginPath();
+  ctx.arc(mx, my, radius * 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Moon disc
+  ctx.fillStyle = '#FFFDE0';
+  ctx.beginPath();
+  ctx.arc(mx, my, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Crescent bite — match sky colour at that Y position
+  const fraction = my / GROUND_Y;
+  const biteColor = lerpRgb(sky.top, sky.hor, fraction);
+  ctx.fillStyle = rgba(biteColor, 1);
+  ctx.beginPath();
+  ctx.arc(mx - radius * 0.38, my - radius * 0.08, radius * 0.82, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ─── UI helpers ───────────────────────────────────────────────────────────────
+function uiText(text, x, y, size, align, color, shadow) {
+  ctx.font = `700 ${size}px Nunito, Arial, sans-serif`;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'middle';
+  if (shadow) {
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur  = 10;
+  }
+  ctx.fillStyle = color;
+  ctx.fillText(text, x, y);
+  ctx.shadowBlur = 0;
+}
+
+function uiBig(text, x, y, size, align, color) {
+  ctx.font = `900 ${size}px Nunito, Arial, sans-serif`;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.45)';
+  ctx.shadowBlur  = 14;
+  ctx.fillStyle   = color;
+  ctx.fillText(text, x, y);
+  ctx.shadowBlur = 0;
+}
+
+// ─── Render: full frame ───────────────────────────────────────────────────────
+function render() {
+  // Clear physical pixels
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.save();
+  ctx.scale(scale, scale);
+  ctx.translate(shakeX, shakeY);
+
+  const sky = getSkyColors(skyPhase);
+
+  // 1. Sky gradient
+  const sg = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  sg.addColorStop(0.00, rgba(sky.top, 1));
+  sg.addColorStop(0.60, rgba(sky.hor, 1));
+  sg.addColorStop(1.00, rgba(sky.bot, 1));
+  ctx.fillStyle = sg;
+  ctx.fillRect(0, 0, LW, GROUND_Y);
+
+  // 2. Stars
+  if (skyPhase >= CFG.STAR_START) {
+    const starAlpha = Math.min(1, (skyPhase - CFG.STAR_START) / 0.22);
+    for (const s of STARS) {
+      const tw = 0.5 + 0.5 * Math.sin(gameTime * s.speed * Math.PI * 2 + s.phase);
+      ctx.fillStyle = `rgba(255,255,220,${starAlpha * (0.3 + tw * 0.7)})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r * (0.6 + tw * 0.4), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // 3. Moon
+  if (skyPhase >= CFG.MOON_START) {
+    moonProg = Math.min(1, (skyPhase - CFG.MOON_START) / (1 - CFG.MOON_START));
+    drawMoon(ctx, moonProg, sky);
+  }
+
+  // 4. Mountains
+  const mountCol = interpCol(MOUNT_COLS, skyPhase);
+  ctx.fillStyle = rgba(mountCol, 1);
+  drawMountainPath(ctx, mountOff);
+
+  // 5. Trees
+  const treeCol = interpCol(TREE_COLS, skyPhase);
+  ctx.fillStyle = rgba(treeCol, 1);
+  drawTrees(ctx, treeOff);
+
+  // 6. Ground detail tufts
+  ctx.fillStyle = rgba(interpCol(TREE_COLS, skyPhase), 0.85);
+  drawGroundDetail(ctx, detailOff);
+
+  // 7. Obstacles
+  const obsFill = rgba(interpCol(TREE_COLS, skyPhase), 1);
+  for (const o of obstacles) drawObs(o, obsFill);
+
+  // 8. Fireflies
+  for (const ff of fireflies) {
+    const pulse = 0.5 + 0.5 * Math.sin(gameTime * CFG.FIREFLY_PULSE * Math.PI * 2 + ff.phase);
+    const r     = 4.5 + pulse * 3;
+    const alpha = 0.55 + pulse * 0.45;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const grad = ctx.createRadialGradient(ff.x, ff.y, 0, ff.x, ff.y, r * 5);
+    grad.addColorStop(0,   `rgba(255,240,100,${alpha * 0.55})`);
+    grad.addColorStop(0.4, `rgba(180,255,80,${alpha * 0.18})`);
+    grad.addColorStop(1,   `rgba(180,255,80,0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(ff.x, ff.y, r * 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = `rgba(255,255,200,${alpha})`;
+    ctx.beginPath();
+    ctx.arc(ff.x, ff.y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 9. Player
+  const PLAYER_X = CFG.PLAYER_X;
+  let scX = 1, scY = 1;
+  const SQUASH_DUR = 0.18;
+  if (squashT > 0) {
+    const st = squashT / SQUASH_DUR;
+    scX = 1 + 0.32 * Math.sin(st * Math.PI);
+    scY = 1 - 0.26 * Math.sin(st * Math.PI);
+  } else if (!onGround) {
+    scX = 0.86; scY = 1.18;
+  }
+  const legAnim = state === 'PLAYING' ? gameTime * 8 * Math.PI : Math.sin(gameTime * 2.5) * 0.3;
+  drawBunny(PLAYER_X, pY, legAnim, scX, scY);
+
+  // 10. Ground strip
+  const gnd1 = lerpRgb(hexRgb('#5C3D20'), hexRgb('#0D0520'), skyPhase);
+  const gnd2 = lerpRgb(hexRgb('#3A2010'), hexRgb('#06020F'), skyPhase);
+  ctx.fillStyle = rgba(gnd1, 1);
+  ctx.fillRect(0, GROUND_Y, LW, 4);
+  ctx.fillStyle = rgba(gnd2, 1);
+  ctx.fillRect(0, GROUND_Y + 4, LW, LH - GROUND_Y);
+
+  // 11. Speed lines
+  if (state === 'PLAYING' && gameSpeed > CFG.SPEEDLINE_THRESH) {
+    const intensity = (gameSpeed - CFG.SPEEDLINE_THRESH) / (CFG.SPEED_MAX - CFG.SPEEDLINE_THRESH);
+    ctx.strokeStyle = `rgba(255,210,120,${intensity * 0.22})`;
+    ctx.lineWidth = 1.5;
+    for (const sl of SPEED_LINES) {
+      ctx.beginPath();
+      ctx.moveTo(sl.x, sl.y);
+      ctx.lineTo(sl.x + sl.len, sl.y);
+      ctx.stroke();
+    }
+  }
+
+  // 12. Particles
+  ctx.save();
+  for (const p of particles) {
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle   = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // 13. Death flash
+  if (deathFlash > 0) {
+    ctx.fillStyle = `rgba(255,200,120,${deathFlash * 0.7})`;
+    ctx.fillRect(0, 0, LW, LH);
+  }
+
+  // 14. HUD / Screen overlays
+  if (state === 'MENU') {
+    renderMenu();
+  } else if (state === 'PLAYING') {
+    renderHUD();
+  } else if (state === 'DEAD') {
+    renderGameOver();
+  }
+
+  ctx.restore();
+}
+
+function renderHUD() {
+  uiText(`${Math.floor(score)}m`, 18, 28, 22, 'left', 'rgba(255,255,255,0.92)', true);
+  uiText(`✦ ${fireCount}`, LW - 18, 28, 22, 'right', 'rgba(255,248,160,0.92)', true);
+
+  // HUD rule
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, 46); ctx.lineTo(LW, 46);
+  ctx.stroke();
+}
+
+function renderMenu() {
+  // Semi-transparent title card
+  ctx.fillStyle = 'rgba(5,2,15,0.42)';
+  roundRect(ctx, LW * 0.08, LH * 0.12, LW * 0.84, LH * 0.24, 20);
+  ctx.fill();
+
+  uiBig('Sleepy Sunset', LW / 2, LH * 0.22, 38, 'center', '#FFF5E0');
+  uiBig('Runner 🌅', LW / 2, LH * 0.30, 34, 'center', '#FFD166');
+
+  // Pulsing CTA
+  const pulse = 0.55 + 0.45 * Math.sin(gameTime * 3);
+  uiText('TAP TO START', LW / 2, LH * 0.76, 28, 'center', `rgba(255,240,180,${pulse})`, true);
+
+  if (highScore > 0) {
+    uiText(`Best: ${Math.floor(highScore)} m`, LW / 2, LH * 0.83, 18, 'center', 'rgba(255,255,255,0.55)', false);
+  }
+}
+
+function renderGameOver() {
+  // Overlay
+  ctx.fillStyle = 'rgba(5,2,15,0.72)';
+  ctx.fillRect(0, 0, LW, LH);
+
+  // Panel
+  ctx.fillStyle = 'rgba(18,8,36,0.92)';
+  roundRect(ctx, LW * 0.08, LH * 0.26, LW * 0.84, LH * 0.48, 24);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,180,80,0.3)';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, LW * 0.08, LH * 0.26, LW * 0.84, LH * 0.48, 24);
+  ctx.stroke();
+
+  const headColor = isNewBest ? '#FFD700' : '#FFB380';
+  const headText  = isNewBest ? '🌟 You Made It!' : 'Night Fell...';
+  uiBig(headText, LW / 2, LH * 0.355, 30, 'center', headColor);
+
+  uiBig(`${Math.floor(score)} m`, LW / 2, LH * 0.455, 52, 'center', '#FFFFFF');
+  uiText(`✦ ${fireCount} fireflies`, LW / 2, LH * 0.525, 20, 'center', '#FFFAAA', false);
+
+  if (isNewBest) {
+    uiText('✦  NEW BEST  ✦', LW / 2, LH * 0.585, 18, 'center', '#FFD700', false);
+  } else if (highScore > 0) {
+    uiText(`Best: ${Math.floor(highScore)} m`, LW / 2, LH * 0.585, 17, 'center', 'rgba(255,255,255,0.5)', false);
+  }
+
+  // Restart button
+  const btnW = 250, btnH = 54;
+  const btnX = LW / 2 - btnW / 2, btnY = LH * 0.645;
+  ctx.fillStyle = '#E86A2C';
+  roundRect(ctx, btnX, btnY, btnW, btnH, 27);
+  ctx.fill();
+  uiText('TAP TO RUN AGAIN', LW / 2, btnY + 28, 20, 'center', '#FFFFFF', false);
+}
+
+// ─── Update ───────────────────────────────────────────────────────────────────
+function update(dt) {
+  gameTime += dt;
+
+  // Shake
+  if (shakeT > 0) {
+    shakeT = Math.max(0, shakeT - dt);
+    const mag = CFG.SHAKE_MAG * (shakeT / CFG.SHAKE_DUR) * (shakeT / CFG.SHAKE_DUR);
+    shakeX = (Math.random() * 2 - 1) * mag;
+    shakeY = (Math.random() * 2 - 1) * mag;
+  } else { shakeX = 0; shakeY = 0; }
+
+  // Death flash
+  if (deathFlash > 0) deathFlash = Math.max(0, deathFlash - dt * 3.5);
+
+  // Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x   += p.vx * dt;
+    p.y   += p.vy * dt;
+    p.vy  += 220 * dt;
+    p.life -= p.decay * dt;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  if (state === 'MENU') {
+    updateMenu(dt);
+  } else if (state === 'PLAYING') {
+    updatePlaying(dt);
+  }
+  // DEAD: only shake + flash update (handled above)
+}
+
+function updateMenu(dt) {
+  // Idle bob for player on menu
+  pY = GROUND_Y + Math.sin(gameTime * 2.5) * 3;
+}
+
+function updatePlaying(dt) {
+  playTime  += dt;
+  score     += gameSpeed * dt / 10;
+  skyPhase   = Math.min(1, skyPhase + CFG.SKY_PHASE_RATE * dt);
+  gameSpeed  = Math.min(CFG.SPEED_MAX, CFG.SPEED_INIT + CFG.SPEED_RAMP * playTime);
+
+  // Squash timer
+  if (squashT > 0) squashT = Math.max(0, squashT - dt);
+
+  // Player physics
+  if (!onGround) {
+    pVY += CFG.GRAVITY * dt;
+    pY  += pVY * dt;
+    if (pY >= GROUND_Y) {
+      pY = GROUND_Y;
+      pVY = 0;
+      onGround  = true;
+      jumpsLeft = 2;
+      squashT   = 0.18;
+      burst(CFG.PLAYER_X, GROUND_Y, 4,
+        ['rgba(120,80,40,0.8)', 'rgba(100,60,30,0.6)'], 30, 70);
+    }
+  }
+
+  // Parallax
+  mountOff  += gameSpeed * CFG.PAR_MOUNT  * dt;
+  treeOff   += gameSpeed * CFG.PAR_TREE   * dt;
+  detailOff += gameSpeed * CFG.PAR_DETAIL * dt;
+
+  // Speed lines
+  for (const sl of SPEED_LINES) {
+    sl.x -= gameSpeed * 1.9 * dt;
+    if (sl.x + sl.len < 0) sl.x = LW + sl.len;
+  }
+
+  // Obstacles
+  sinceObs += dt;
+  if (sinceObs >= nextObs) {
+    spawnObs();
+    sinceObs = 0;
+    const f = (gameSpeed - CFG.SPEED_INIT) / (CFG.SPEED_MAX - CFG.SPEED_INIT);
+    const minI = CFG.OBS_INTERVAL_MIN * (1 - f * CFG.OBS_INTERVAL_SCALE);
+    const maxI = CFG.OBS_INTERVAL_MAX * (1 - f * CFG.OBS_INTERVAL_SCALE * 0.5);
+    nextObs = Math.max(0.65, minI + Math.random() * (maxI - minI));
+  }
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    obstacles[i].x -= gameSpeed * dt;
+    if (obstacles[i].x + obstacles[i].w < 0) { obstacles.splice(i, 1); continue; }
+
+    // Collision
+    const o = obstacles[i];
+    const shrink = 10;
+    const px1 = CFG.PLAYER_X - 18 + shrink;
+    const px2 = CFG.PLAYER_X + 18 - shrink;
+    const py1 = pY - 72 + shrink;
+    const py2 = pY - shrink;
+    if (px1 < o.x + o.w - shrink && px2 > o.x + shrink &&
+        py1 < o.y + o.h - shrink && py2 > o.y + shrink) {
+      die();
+      return;
+    }
+  }
+
+  // Fireflies
+  for (let i = fireflies.length - 1; i >= 0; i--) {
+    const ff = fireflies[i];
+    ff.x -= gameSpeed * 0.6 * dt;
+    ff.y  = ff.baseY + Math.sin(gameTime * 1.6 + ff.phase) * 14;
+    if (ff.x < -20) { fireflies.splice(i, 1); continue; }
+
+    // Collection
+    const dx = CFG.PLAYER_X - ff.x;
+    const dy = (pY - 36) - ff.y;
+    if (Math.sqrt(dx * dx + dy * dy) < 32) {
+      fireCount++;
+      burst(ff.x, ff.y, 12,
+        ['#FFE94D','#AAFF44','#FFFFFF','#FFD700'], 70, 160);
+      fireflies.splice(i, 1);
+    }
+  }
+}
+
+// ─── Game state transitions ───────────────────────────────────────────────────
+function startGame() {
+  state      = 'PLAYING';
+  playTime   = 0;
+  score      = 0;
+  fireCount  = 0;
+  isNewBest  = false;
+  skyPhase   = 0;
+  gameSpeed  = CFG.SPEED_INIT;
+  pY         = GROUND_Y;
+  pVY        = 0;
+  onGround   = true;
+  jumpsLeft  = 2;
+  squashT    = 0;
+  mountOff   = 0; treeOff = 0; detailOff = 0;
+  obstacles  = []; fireflies = []; particles = [];
+  sinceObs   = 0;
+  nextObs    = CFG.OBS_INTERVAL_MAX;
+  moonProg   = 0;
+  deathFlash = 0;
+  shakeT     = 0;
+}
+
+function die() {
+  const s = Math.floor(score);
+  if (s > highScore) {
+    isNewBest = true;
+    highScore = s;
+    localStorage.setItem(HS_KEY, String(s));
+  }
+  state      = 'DEAD';
+  deathFlash = 1;
+  shakeT     = CFG.SHAKE_DUR;
+  burst(CFG.PLAYER_X, pY - 36, 18,
+    ['#FF6B35','#FF9A3C','#FFD166','#FFFFFF'], 80, 200);
+}
+
+function doJump() {
+  if (state === 'MENU')  { startGame(); return; }
+  if (state === 'DEAD')  { startGame(); return; }
+  if (state !== 'PLAYING') return;
+
+  if (jumpsLeft > 0) {
+    pVY = jumpsLeft === 2 ? CFG.JUMP_VEL : CFG.DOUBLE_JUMP_VEL;
+    onGround  = false;
+    jumpsLeft--;
+    squashT = 0; // cancel any landing squash
+  }
+}
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+canvas.addEventListener('touchstart', e => { e.preventDefault(); doJump(); }, { passive: false });
+canvas.addEventListener('mousedown',  () => doJump());
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); doJump(); }
+});
+
+// ─── Main loop ────────────────────────────────────────────────────────────────
+let lastTs = null;
+function loop(ts) {
+  if (lastTs === null) lastTs = ts;
+  const dt = Math.min((ts - lastTs) / 1000, 0.05);
+  lastTs = ts;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+document.fonts.ready.then(() => { fontReady = true; });
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

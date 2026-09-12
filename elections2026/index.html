@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>בחירות 2026 לכנסת ה-26 — מרכז הסקרים</title>
+<meta name="description" content="כל סקרי הבחירות לכנסת ה-26 שפורסמו לוועדת הבחירות המרכזית, בתצוגת מגמות אינטראקטיבית וטבלה מלאה.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div>
+        <strong>בחירות 2026</strong>
+        <span>הכנסת ה-26</span>
+      </div>
+    </div>
+    <nav class="site-nav">
+      <a href="#polls" class="active">סקרים</a>
+      <a href="#coalition">גושים וקואליציה</a>
+    </nav>
+    <button id="theme-toggle" class="ghost-btn" type="button" aria-label="החלפת ערכת צבעים">
+      <span data-theme-icon>☾</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">מרכז הנתונים</p>
+      <h1>כל סקרי הבחירות לכנסת ה-26<br><span>במקום אחד, לאורך זמן</span></h1>
+      <p class="lede">
+        הנתונים נאספים אוטומטית מפרסומי הסקרים של ועדת הבחירות המרכזית, וקבצי ה-PDF
+        שמפרסמים עורכי הסקרים מפוענחים לטבלת מנדטים אחידה.
+      </p>
+      <div id="hero-stats" class="hero-stats"></div>
+    </div>
+  </section>
+
+  <section id="polls" class="panel">
+    <div class="wrap">
+      <div class="panel-head">
+        <div>
+          <h2>מגמות בגודל המפלגות</h2>
+          <p class="panel-sub">בחרו מפלגות, החליפו בין מנדטים לאחוזים גולמיים ובין ממוצע נע לסקרים בודדים, וסננו לפי תקופה.</p>
+        </div>
+        <div class="head-controls">
+          <div class="seg" role="group" aria-label="יחידת מדידה">
+            <button type="button" data-metric="seats" class="active">מנדטים</button>
+            <button type="button" data-metric="percent">אחוזים גולמיים</button>
+          </div>
+          <div class="seg" role="group" aria-label="סוג תצוגה">
+            <button type="button" data-mode="avg" class="active">ממוצע נע</button>
+            <button type="button" data-mode="raw">סקרים בודדים</button>
+            <button type="button" data-mode="bloc">גושים</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label class="field">
+          <span>חלון ממוצע</span>
+          <select id="window-select">
+            <option value="3">3 סקרים</option>
+            <option value="5" selected>5 סקרים</option>
+            <option value="7">7 סקרים</option>
+            <option value="10">10 סקרים</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>מ-</span>
+          <input type="date" id="from-date">
+        </label>
+        <label class="field">
+          <span>עד</span>
+          <input type="date" id="to-date">
+        </label>
+        <label class="field">
+          <span>מכון סקרים</span>
+          <select id="pollster-select"><option value="">כל המכונים</option></select>
+        </label>
+        <button type="button" id="reset-filters" class="ghost-btn">איפוס</button>
+      </div>
+
+      <figure class="chart-card">
+        <div id="chart" class="chart" role="img" aria-label="גרף מגמות מנדטים לאורך זמן"></div>
+        <figcaption id="chart-note" class="chart-note"></figcaption>
+      </figure>
+
+      <div id="legend" class="legend" role="group" aria-label="בחירת מפלגות"></div>
+
+      <div class="panel-head table-head">
+        <div>
+          <h2>כל התוצאות</h2>
+          <p class="panel-sub">שורה לכל סקר. לחיצה על כותרת מפלגה ממיינת לפיה; לחיצה על התאריך חוזרת לסדר הכרונולוגי.</p>
+        </div>
+        <div class="table-tools">
+          <label class="switch">
+            <input type="checkbox" id="heat-toggle" checked>
+            <span>הדגשת עוצמה</span>
+          </label>
+          <button type="button" id="csv-btn" class="ghost-btn">הורדת CSV</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="polls-table" class="polls-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <details id="excluded" class="excluded">
+        <summary></summary>
+        <div class="excluded-body"></div>
+      </details>
+    </div>
+  </section>
+
+  <section id="coalition" class="panel panel-alt">
+    <div class="wrap">
+      <div class="panel-head">
+        <div>
+          <h2>מפת הגושים והרכב קואליציה</h2>
+          <p class="panel-sub">
+            סמנו רשימות כדי להרכיב קואליציה ולבדוק אם היא מגיעה ל-61 מנדטים.
+            המפה מתעדכנת לפי הבחירה.
+          </p>
+        </div>
+        <label class="field">
+          <span>בסיס הנתונים</span>
+          <select id="coalition-source"></select>
+        </label>
+      </div>
+
+      <div class="coalition-grid">
+        <figure class="chart-card">
+          <div id="seatmap" class="chart" role="img" aria-label="מפת מושבי הכנסת"></div>
+          <figcaption id="seatmap-note" class="chart-note"></figcaption>
+        </figure>
+        <div class="coalition-side">
+          <div id="coalition-verdict" class="verdict"></div>
+          <div id="bloc-bars" class="bloc-bars"></div>
+        </div>
+      </div>
+
+      <div class="panel-head picker-head">
+        <div>
+          <h3>הרשימות</h3>
+          <p class="panel-sub">לחיצה מוסיפה או מסירה רשימה מהקואליציה.</p>
+        </div>
+        <div class="preset-row" id="coalition-presets"></div>
+      </div>
+      <div id="party-picker" class="party-picker"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>
+      מקור הנתונים: <a id="source-link" href="#" target="_blank" rel="noopener">ועדת הבחירות המרכזית לכנסת</a>.
+      הנתונים משקפים את הסקרים כפי שפורסמו ואינם תחזית לתוצאות הבחירות.
+    </p>
+    <p class="muted" id="build-note"></p>
+  </div>
+</footer>
+
+<div id="tooltip" class="tooltip" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

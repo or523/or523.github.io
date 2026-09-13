@@ -165,7 +165,7 @@ a { color: var(--accent); }
 
 /* ---------- panel ---------- */
 
-.panel { padding: 2rem 0 5rem; }
+.panel { padding: 2rem 0 3.5rem; }
 
 .panel-head {
   display: flex;
@@ -184,8 +184,6 @@ a { color: var(--accent); }
 }
 
 .panel-sub { margin: .25rem 0 0; color: var(--ink-soft); font-size: .93rem; max-width: 66ch; }
-
-.table-head { margin-top: 3.2rem; }
 
 .head-controls {
   display: flex;
@@ -472,6 +470,35 @@ a { color: var(--accent); }
 .verdict.no-majority { border-inline-start-color: #dc2626; }
 .verdict.no-majority strong { color: #dc2626; }
 
+.history {
+  margin-top: .85rem;
+  padding-top: .8rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.history-line { font-size: .92rem; color: var(--ink-soft); }
+/* Outrank .verdict.has-majority/.no-majority strong: the count is its own
+   statistic and must not take the colour of the averaged verdict. */
+.verdict .history-line strong { font-size: 1.05rem; color: var(--ink); font-weight: 800; }
+
+.poll-strip { display: flex; gap: 5px; flex-wrap: wrap; }
+
+.poll-dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 5px;
+  background: var(--bg-sunk);
+  border: 1px solid var(--line-strong);
+  cursor: help;
+}
+
+.poll-dot.is-majority { background: #16a34a; border-color: #16a34a; }
+
+.history-note { font-size: .78rem; color: var(--ink-faint); }
+
 .bloc-bars {
   background: var(--bg-elev);
   border: 1px solid var(--line);
@@ -566,6 +593,8 @@ a { color: var(--accent); }
   color: var(--ink-faint);
 }
 
+.party-card.below { border-style: dashed; opacity: .78; }
+.party-card.below .party-seats { font-size: .72rem; font-weight: 600; }
 .party-card:hover { border-color: var(--accent); }
 .party-card.on {
   color: var(--ink);

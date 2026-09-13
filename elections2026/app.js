@@ -680,6 +680,27 @@ function setupControls() {
   window.addEventListener('resize', hideTooltip);
 }
 
+/** Highlight the nav link for whichever section is currently in view. */
+function setupNav() {
+  const links = [...document.querySelectorAll('.site-nav a')]
+    .map((link) => ({ link, section: document.querySelector(link.getAttribute('href')) }))
+    .filter((entry) => entry.section);
+  if (!links.length) return;
+  const mark = () => {
+    // The last section whose top has crossed the upper third of the viewport.
+    const line = window.scrollY + window.innerHeight * 0.35;
+    let current = null;
+    links.forEach((entry) => {
+      const top = entry.section.getBoundingClientRect().top + window.scrollY;
+      if (top <= line) current = entry;
+    });
+    links.forEach((entry) => entry.link.classList.toggle('active', entry === current));
+  };
+  window.addEventListener('scroll', mark, { passive: true });
+  window.addEventListener('resize', mark);
+  mark();
+}
+
 function setupTheme() {
   const stored = localStorage.getItem('theme');
   const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -714,6 +735,7 @@ async function init() {
     `הנתונים מכסים ${state.data.counts.published} פרסומים, עד לסקר מיום ${fmtLongDate.format(parseDate(last.date))}.`;
 
   setupControls();
+  setupNav();
   renderExcluded();
   renderAll();
   setupCoalition();
@@ -751,14 +773,44 @@ function apportion(means, total) {
   return out;
 }
 
+/**
+ * Apply the electoral threshold and hand the surviving lists all 120 seats.
+ *
+ * Averaging a list that cleared the threshold in only some of the polls leaves
+ * it with a fractional seat count no real projection can produce -- no single
+ * poll in this data gives any list between one and three seats. Dropping those
+ * and reallocating is what the real count does with below-threshold votes.
+ */
+function applyThreshold(values) {
+  const kept = {};
+  const below = {};
+  Object.entries(values).forEach(([party, value]) => {
+    if (value >= THRESHOLD_SEATS) kept[party] = value;
+    else if (value > 0) below[party] = value;
+  });
+  return { seats: apportion(kept, 120), below };
+}
+
+/** How many of the last `count` polls the chosen coalition wins a majority in. */
+function coalitionHistory(count) {
+  return state.data.polls.slice(-count).map((poll) => {
+    const total = [...state.coalition]
+      .reduce((acc, party) => acc + (poll.seats[party] || 0), 0);
+    return { poll, total, majority: total >= MAJORITY };
+  });
+}
+
 /** Seats the coalition panel works from: one poll, or an average of the latest. */
 function coalitionBase() {
   const source = state.coalitionSource || 'avg:5';
   if (source.startsWith('poll:')) {
     const poll = state.data.polls.find((entry) => entry.id === source.slice(5));
     if (poll) {
+      const { seats, below } = applyThreshold(poll.seats);
       return {
-        seats: { ...poll.seats },
+        seats,
+        below,
+        window: 5,
         note: `לפי סקר ${poll.pollster} מיום ${fmtLongDate.format(parseDate(poll.date))}.`,
       };
     }
@@ -770,10 +822,16 @@ function coalitionBase() {
     const sum = recent.reduce((acc, poll) => acc + (poll.seats[party.name] || 0), 0);
     if (sum > 0) means[party.name] = sum / recent.length;
   });
+  const { seats, below } = applyThreshold(means);
   return {
-    seats: apportion(means, 120),
+    seats,
+    below,
+    window: recent.length,
     note: `ממוצע ${recent.length} הסקרים האחרונים, מחולק ל-120 מנדטים בשיטת השארית הגדולה. `
-      + 'רשימה שלא הופיעה באחד הסקרים נספרת בו כאפס.',
+      + 'רשימה שלא הופיעה באחד הסקרים נספרת בו כאפס'
+      + (Object.keys(below).length
+        ? ', ולכן יש רשימות שנותרו מתחת ל-4 מנדטים בממוצע; המנדטים שלהן חולקו מחדש.'
+        : '.'),
   };
 }
 
@@ -886,6 +944,29 @@ function renderBlocBars(base) {
       </div>`).join('');
 }
 
+/** "A majority in 3 of the last 5 polls", with the spread and a dot per poll. */
+function historyBlock(base) {
+  const history = coalitionHistory(base.window);
+  if (!history.length) return '';
+  const wins = history.filter((entry) => entry.majority).length;
+  const totals = history.map((entry) => entry.total);
+  const low = Math.min(...totals);
+  const high = Math.max(...totals);
+  const spread = low === high ? `${low} מנדטים בכל אחד מהם`
+    : `בין ${low} ל-${high} מנדטים`;
+  const dots = history.map((entry) => `
+    <span class="poll-dot${entry.majority ? ' is-majority' : ''}"
+          title="${attr(`${fmtDate.format(parseDate(entry.poll.date))} · ${entry.poll.pollster} — ${entry.total} מנדטים`)}"></span>`).join('');
+  return `
+    <div class="history">
+      <div class="history-line">
+        <strong>${wins}</strong> מתוך ${history.length} הסקרים האחרונים מזכים אותה ברוב
+      </div>
+      <div class="poll-strip">${dots}</div>
+      <div class="history-note">${spread} · מהישן לחדש, מימין לשמאל</div>
+    </div>`;
+}
+
 function renderVerdict(base) {
   const total = coalitionTotal(base);
   const gap = MAJORITY - total;
@@ -899,7 +980,8 @@ function renderVerdict(base) {
   if (gap <= 0) {
     host.className = 'verdict has-majority';
     host.innerHTML = `<strong>יש רוב — ${total} מנדטים</strong>`
-      + `<span>${total === MAJORITY ? 'רוב מינימלי' : `${total - MAJORITY} מעבר ל-61`}</span>`;
+      + `<span>${total === MAJORITY ? 'רוב מינימלי' : `${total - MAJORITY} מעבר ל-61`}</span>`
+      + historyBlock(base);
     return;
   }
   const helpers = Object.keys(base.seats)
@@ -907,18 +989,25 @@ function renderVerdict(base) {
     .sort((a, b) => base.seats[a] - base.seats[b]);
   host.className = 'verdict no-majority';
   host.innerHTML = `<strong>אין רוב — ${total} מנדטים</strong>`
-    + `<span>חסרים ${gap} מנדטים${helpers.length ? `. הוספת ${helpers[0]} משלימה לרוב` : ''}</span>`;
+    + `<span>חסרים ${gap} מנדטים${helpers.length ? `. הוספת ${helpers[0]} משלימה לרוב` : ''}</span>`
+    + historyBlock(base);
 }
 
 function renderPartyPicker(base) {
   const host = el('party-picker');
-  host.innerHTML = orderedParties(base.seats).map((party) => `
-    <button type="button" class="party-card${state.coalition.has(party) ? ' on' : ''}"
-            data-party="${attr(party)}" aria-pressed="${state.coalition.has(party)}">
+  const card = (party, seats, below) => `
+    <button type="button" class="party-card${state.coalition.has(party) ? ' on' : ''}${below ? ' below' : ''}"
+            data-party="${attr(party)}" aria-pressed="${state.coalition.has(party)}"
+            title="${attr(below
+              ? `${party} — מתחת לאחוז החסימה בבסיס הנתונים שנבחר, אך קיבלה מנדטים בחלק מהסקרים`
+              : `${party} — ${seats} מנדטים`)}">
       <span class="swatch" style="background:${colorOf(party)}"></span>
       <span class="party-name">${party}</span>
-      <span class="party-seats">${base.seats[party]}</span>
-    </button>`).join('');
+      <span class="party-seats">${below ? 'מתחת לחסימה' : seats}</span>
+    </button>`;
+  const seated = orderedParties(base.seats).map((party) => card(party, base.seats[party], false));
+  const below = orderedParties(base.below).map((party) => card(party, 0, true));
+  host.innerHTML = seated.join('') + below.join('');
   host.querySelectorAll('.party-card').forEach((card) => {
     card.addEventListener('click', () => {
       const party = card.dataset.party;
@@ -931,9 +1020,9 @@ function renderPartyPicker(base) {
 
 function renderCoalition() {
   const base = coalitionBase();
-  // Drop anything the current base no longer seats, so the total stays honest.
+  // Keep only lists the current base knows about, seated or below the threshold.
   [...state.coalition].forEach((party) => {
-    if (!(party in base.seats)) state.coalition.delete(party);
+    if (!(party in base.seats) && !(party in base.below)) state.coalition.delete(party);
   });
   renderSeatMap(base);
   renderBlocBars(base);

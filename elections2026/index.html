@@ -21,8 +21,9 @@
       </div>
     </div>
     <nav class="site-nav">
-      <a href="#polls" class="active">סקרים</a>
-      <a href="#coalition">גושים וקואליציה</a>
+      <a href="#trends">מגמות</a>
+      <a href="#coalition">קואליציה</a>
+      <a href="#results">כל התוצאות</a>
     </nav>
     <button id="theme-toggle" class="ghost-btn" type="button" aria-label="החלפת ערכת צבעים">
       <span data-theme-icon>☾</span>
@@ -43,7 +44,7 @@
     </div>
   </section>
 
-  <section id="polls" class="panel">
+  <section id="trends" class="panel">
     <div class="wrap">
       <div class="panel-head">
         <div>
@@ -94,32 +95,6 @@
       </figure>
 
       <div id="legend" class="legend" role="group" aria-label="בחירת מפלגות"></div>
-
-      <div class="panel-head table-head">
-        <div>
-          <h2>כל התוצאות</h2>
-          <p class="panel-sub">שורה לכל סקר. לחיצה על כותרת מפלגה ממיינת לפיה; לחיצה על התאריך חוזרת לסדר הכרונולוגי.</p>
-        </div>
-        <div class="table-tools">
-          <label class="switch">
-            <input type="checkbox" id="heat-toggle" checked>
-            <span>הדגשת עוצמה</span>
-          </label>
-          <button type="button" id="csv-btn" class="ghost-btn">הורדת CSV</button>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table id="polls-table" class="polls-table">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <details id="excluded" class="excluded">
-        <summary></summary>
-        <div class="excluded-body"></div>
-      </details>
     </div>
   </section>
 
@@ -158,6 +133,36 @@
         <div class="preset-row" id="coalition-presets"></div>
       </div>
       <div id="party-picker" class="party-picker"></div>
+    </div>
+  </section>
+
+  <section id="results" class="panel">
+    <div class="wrap">
+      <div class="panel-head">
+        <div>
+          <h2>כל התוצאות</h2>
+          <p class="panel-sub">שורה לכל סקר. לחיצה על כותרת מפלגה ממיינת לפיה; לחיצה על התאריך חוזרת לסדר הכרונולוגי.</p>
+        </div>
+        <div class="table-tools">
+          <label class="switch">
+            <input type="checkbox" id="heat-toggle" checked>
+            <span>הדגשת עוצמה</span>
+          </label>
+          <button type="button" id="csv-btn" class="ghost-btn">הורדת CSV</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="polls-table" class="polls-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <details id="excluded" class="excluded">
+        <summary></summary>
+        <div class="excluded-body"></div>
+      </details>
     </div>
   </section>
 </main>

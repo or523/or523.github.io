@@ -442,11 +442,20 @@ function renderStats() {
   };
   const netanyahu = blocAverage('netanyahu');
 
+  // A duplicate filing does carry a national projection -- it is just counted once.
+  const duplicates = state.data.excluded
+    .filter((poll) => (poll.reason || '').startsWith('duplicate filing')).length;
+  const excludedNote = [`${counts.excluded - duplicates} פרסומים ללא תחזית מנדטים ארצית`]
+    .concat(duplicates
+      ? [duplicates === 1 ? 'סקר אחד שהוגש פעמיים' : `${duplicates} סקרים שהוגשו פעמיים`]
+      : [])
+    .join(' · ');
+
   const cards = [
     {
       label: 'סקרים שנותחו',
       value: `${counts.parsed}<span class="unit"> / ${counts.published}</span>`,
-      note: `${counts.excluded} פרסומים ללא תחזית מנדטים ארצית`,
+      note: excludedNote,
     },
     {
       label: 'הסקר האחרון',

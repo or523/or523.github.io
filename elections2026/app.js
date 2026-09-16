@@ -29,6 +29,17 @@ const state = {
 const fmtDate = new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'short' });
 const fmtLongDate = new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
 const parseDate = (iso) => new Date(iso + 'T00:00:00');
+
+/**
+ * When a poll's fieldwork ran, as its PDF states it: "9 בספט׳", or a range such
+ * as "7–8 בספט׳" when collection spanned more than one day.
+ */
+function fmtFieldwork(poll, formatter = fmtDate) {
+  const end = parseDate(poll.fieldworkEnd || poll.date);
+  const start = poll.fieldworkStart ? parseDate(poll.fieldworkStart) : end;
+  if (start.getTime() === end.getTime() || !formatter.formatRange) return formatter.format(end);
+  return formatter.formatRange(start, end);
+}
 const round1 = (n) => Math.round(n * 10) / 10;
 // Party names carry double quotes (ש"ס, רע"ם); unescaped they truncate any
 // HTML attribute they are interpolated into.
@@ -351,7 +362,7 @@ function showTooltip(event, poll, rows, plotTop, plotBottom) {
   const tip = el('tooltip');
   const smoothed = state.mode !== 'raw';
   tip.innerHTML = `
-    <h4>${fmtLongDate.format(parseDate(poll.date))}</h4>
+    <h4>${fmtFieldwork(poll, fmtLongDate)}</h4>
     <div class="tip-meta">${poll.pollster}${poll.publisher ? ' · ' + poll.publisher : ''}</div>
     ${rows.map((row) => `
       <div class="tip-row">
@@ -518,7 +529,7 @@ function renderTable() {
 
   table.querySelector('thead').innerHTML = `
     <tr>
-      <th class="sticky-col party-col" data-sort="date">תאריך ${flag('date')}</th>
+      <th class="sticky-col party-col" data-sort="date">מועד איסוף ${flag('date')}</th>
       <th class="party-col" data-sort="pollster">מכון ${flag('pollster')}</th>
       <th>מפרסם</th>
       ${parties.map((party) => `
@@ -532,7 +543,9 @@ function renderTable() {
   const max = Math.max(...polls.flatMap((poll) => Object.values(valuesOf(poll))), 1);
   table.querySelector('tbody').innerHTML = tableRows().map((poll) => `
     <tr>
-      <td class="sticky-col cell-date">${fmtDate.format(parseDate(poll.date))}</td>
+      <td class="sticky-col cell-date">${fmtFieldwork(poll)}${poll.dateSource === 'cec'
+        ? '<span class="date-note" title="מועד האיסוף לא צוין בקובץ הסקר; מוצג תאריך ועדת הבחירות">*</span>'
+        : ''}</td>
       <td class="cell-meta">${poll.pollster}</td>
       <td class="cell-meta">${poll.publisher || '—'}</td>
       ${parties.map((party) => {
@@ -572,7 +585,7 @@ function renderExcluded() {
        מהם כוללים תחזית מנדטים ארצית מלאה ונכללים כאן. השאר:</p>
     <ul>${list.map((poll) => `
       <li>
-        <strong>${fmtDate.format(parseDate(poll.date))}</strong> · ${poll.pollster}
+        <strong>${fmtFieldwork(poll)}</strong> · ${poll.pollster}
         ${poll.publisher ? '(' + poll.publisher + ')' : ''} — ${poll.reasonHe || poll.reason}
         ${poll.pdf ? `<a href="${poll.pdf}" target="_blank" rel="noopener">קובץ המקור</a>` : ''}
       </li>`).join('')}</ul>`;
@@ -584,12 +597,15 @@ function downloadCsv() {
   const polls = tableRows();
   const parties = activeParties(filteredPolls());
   const unit = state.metric === 'percent' ? ' (%)' : ' (מנדטים)';
-  const head = ['תאריך', 'מכון', 'מפרסם',
+  const head = ['תאריך', 'תחילת איסוף', 'סיום איסוף', 'מקור התאריך', 'מכון', 'מפרסם',
     ...parties.map((p) => p.name + unit), 'סה״כ', 'קישור'];
   const lines = [head, ...polls.map((poll) => {
     const values = valuesOf(poll);
     return [
       poll.date,
+      poll.fieldworkStart || poll.date,
+      poll.fieldworkEnd || poll.date,
+      poll.dateSource === 'cec' ? 'ועדת הבחירות' : 'קובץ הסקר',
       poll.pollster,
       poll.publisher || '',
       ...parties.map((party) => (party.name in values ? values[party.name] : '')),
@@ -820,7 +836,7 @@ function coalitionBase() {
         seats,
         below,
         window: 5,
-        note: `לפי סקר ${poll.pollster} מיום ${fmtLongDate.format(parseDate(poll.date))}.`,
+        note: `לפי סקר ${poll.pollster}, שנערך ${fmtFieldwork(poll, fmtLongDate)}.`,
       };
     }
   }
@@ -965,7 +981,7 @@ function historyBlock(base) {
     : `בין ${low} ל-${high} מנדטים`;
   const dots = history.map((entry) => `
     <span class="poll-dot${entry.majority ? ' is-majority' : ''}"
-          title="${attr(`${fmtDate.format(parseDate(entry.poll.date))} · ${entry.poll.pollster} — ${entry.total} מנדטים`)}"></span>`).join('');
+          title="${attr(`${fmtFieldwork(entry.poll)} · ${entry.poll.pollster} — ${entry.total} מנדטים`)}"></span>`).join('');
   return `
     <div class="history">
       <div class="history-line">
@@ -1045,7 +1061,7 @@ function setupCoalition() {
     .map((n) => `<option value="avg:${n}">ממוצע ${n} הסקרים האחרונים</option>`).join('');
   const polls = state.data.polls.slice().reverse()
     .map((poll) => `<option value="poll:${poll.id}">`
-      + `${fmtDate.format(parseDate(poll.date))} · ${poll.pollster}</option>`).join('');
+      + `${fmtFieldwork(poll)} · ${poll.pollster}</option>`).join('');
   select.innerHTML = `${averages}<optgroup label="סקר בודד">${polls}</optgroup>`;
   select.value = 'avg:5';
   state.coalitionSource = 'avg:5';

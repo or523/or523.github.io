@@ -726,6 +726,53 @@ function setupNav() {
   mark();
 }
 
+/** Relative luminance of a #rrggbb colour, per WCAG. */
+function luminance(hex) {
+  const channel = (offset) => {
+    const value = parseInt(hex.slice(offset, offset + 2), 16) / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+}
+
+function mixWithWhite(hex, amount) {
+  return '#' + [1, 3, 5].map((offset) => {
+    const value = parseInt(hex.slice(offset, offset + 2), 16);
+    return Math.round(value + (255 - value) * amount).toString(16).padStart(2, '0');
+  }).join('');
+}
+
+const DARK_SURFACE = '#131826'; // --bg-elev in the dark theme
+const MIN_CONTRAST = 3; // WCAG minimum for graphical marks
+
+const contrastRatio = (a, b) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+/**
+ * Party colours as drawn in the current theme. Several are too dark to make out
+ * against the dark background, so in dark mode they are lifted toward white.
+ * Near-black ones (Shas, the Haredi public list) go to a light grey -- a small
+ * lift would leave them a mid grey indistinguishable from United Torah Judaism's
+ * -- and the rest are lifted only as far as needed, so they keep their hue.
+ */
+function applyPartyColors() {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  state.data.parties.forEach((party) => {
+    if (!party.baseColor) party.baseColor = party.color;
+    let color = party.baseColor;
+    if (dark && luminance(color) < 0.06) {
+      color = mixWithWhite(color, 0.75);
+    } else if (dark) {
+      for (let amount = 0.05; contrastRatio(color, DARK_SURFACE) < MIN_CONTRAST && amount <= 1; amount += 0.05) {
+        color = mixWithWhite(party.baseColor, amount);
+      }
+    }
+    party.color = color;
+  });
+}
+
 function setupTheme() {
   const stored = localStorage.getItem('theme');
   const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -738,7 +785,11 @@ function setupTheme() {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     localStorage.setItem('theme', next);
     apply(next);
-    if (state.data) renderChart();
+    if (!state.data) return;
+    // Colours are baked into the chart, table and seat map, so redraw them all.
+    applyPartyColors();
+    renderAll();
+    renderCoalition();
   });
 }
 
@@ -748,6 +799,8 @@ async function init() {
   // new polls are published, and a returning visitor must not see stale seats.
   const response = await fetch('data/polls.json', { cache: 'no-cache' });
   state.data = await response.json();
+
+  applyPartyColors();
 
   // Hide the long tail so the default chart stays readable.
   state.data.parties.forEach((party) => {

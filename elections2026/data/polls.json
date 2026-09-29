@@ -4,10 +4,10 @@
   "page": "https://www.gov.il/he/Departments/DynamicCollectors/knesset_election_polls_26"
  },
  "counts": {
-  "published": 80,
-  "parsed": 75,
-  "excluded": 5,
-  "withPercents": 65
+  "published": 84,
+  "parsed": 77,
+  "excluded": 7,
+  "withPercents": 67
  },
  "blocs": {
   "netanyahu": [
@@ -43,73 +43,73 @@
    "name": "הליכוד",
    "color": "#2563eb",
    "bloc": "netanyahu",
-   "polls": 75
+   "polls": 77
   },
   {
    "name": "ביחד",
    "color": "#14b8a6",
    "bloc": "opposition",
-   "polls": 75
+   "polls": 77
   },
   {
    "name": "ישר!",
    "color": "#f97316",
    "bloc": "opposition",
-   "polls": 75
+   "polls": 77
   },
   {
    "name": "הדמוקרטים",
    "color": "#e11d48",
    "bloc": "opposition",
-   "polls": 75
+   "polls": 77
   },
   {
    "name": "הציונות הדתית",
    "color": "#7c3aed",
    "bloc": "netanyahu",
-   "polls": 68
+   "polls": 70
   },
   {
    "name": "עוצמה יהודית",
    "color": "#a16207",
    "bloc": "netanyahu",
-   "polls": 75
+   "polls": 77
   },
   {
    "name": "ש\"ס",
    "color": "#111827",
    "bloc": "netanyahu",
-   "polls": 75
+   "polls": 77
   },
   {
    "name": "יהדות התורה",
    "color": "#6b7280",
    "bloc": "netanyahu",
-   "polls": 75
+   "polls": 77
   },
   {
    "name": "ישראל ביתנו",
    "color": "#0ea5e9",
    "bloc": "opposition",
-   "polls": 75
+   "polls": 77
   },
   {
    "name": "רע\"ם",
    "color": "#16a34a",
    "bloc": "arab",
-   "polls": 74
+   "polls": 76
   },
   {
    "name": "הרשימה המשותפת",
    "color": "#b91c1c",
    "bloc": "arab",
-   "polls": 75
+   "polls": 77
   },
   {
    "name": "עמך ישראל",
    "color": "#92400e",
    "bloc": "netanyahu",
-   "polls": 31
+   "polls": 33
   },
   {
    "name": "כחול לבן",
@@ -121,7 +121,7 @@
    "name": "בית ציוני – המילואימניקים",
    "color": "#0891b2",
    "bloc": "opposition",
-   "polls": 19
+   "polls": 20
   },
   {
    "name": "יסודות ישראל",
@@ -2457,52 +2457,6 @@
    "percentTotal": 94.9
   },
   {
-   "id": "knesset_election60",
-   "date": "2026-09-09",
-   "fieldworkStart": "2026-09-09",
-   "fieldworkEnd": "2026-09-09",
-   "dateSource": "pdf",
-   "cecDate": "2026-09-09",
-   "published": "2026-09-10",
-   "pollster": "קנטאר ישראל",
-   "publisher": "תאגיד השידור כאן , כנפי נשרים 23, ירושלים",
-   "reference": "4137",
-   "notes": null,
-   "pdf": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/knesset_election60/he/Survey_4137.pdf",
-   "seats": {
-    "הליכוד": 21,
-    "ביחד": 12,
-    "ישר!": 24,
-    "הדמוקרטים": 9,
-    "בית ציוני – המילואימניקים": 4,
-    "הציונות הדתית": 5,
-    "עוצמה יהודית": 7,
-    "עמך ישראל": 4,
-    "ישראל ביתנו": 7,
-    "ש\"ס": 7,
-    "יהדות התורה": 8,
-    "הרשימה המשותפת": 7,
-    "רע\"ם": 5
-   },
-   "total": 120,
-   "percents": {
-    "הליכוד": 17.0,
-    "ביחד": 9.7,
-    "ישר!": 19.4,
-    "הדמוקרטים": 7.2,
-    "בית ציוני – המילואימניקים": 3.3,
-    "הציונות הדתית": 4.1,
-    "עוצמה יהודית": 5.7,
-    "עמך ישראל": 3.3,
-    "ישראל ביתנו": 5.7,
-    "ש\"ס": 5.7,
-    "יהדות התורה": 6.5,
-    "הרשימה המשותפת": 5.7,
-    "רע\"ם": 4.1
-   },
-   "percentTotal": 97.4
-  },
-  {
    "id": "knesset_election61",
    "date": "2026-09-09",
    "fieldworkStart": "2026-09-09",
@@ -2735,6 +2689,58 @@
     "רע\"ם": 3.3
    },
    "percentTotal": 93.6
+  },
+  {
+   "id": "knesset_election82",
+   "date": "2026-09-09",
+   "fieldworkStart": "2026-09-09",
+   "fieldworkEnd": "2026-09-09",
+   "dateSource": "pdf",
+   "cecDate": "2026-09-09",
+   "published": "2026-09-27",
+   "pollster": "קנטאר ישראל",
+   "publisher": "תאגיד השידור כאן , כנפי נשרים 23, ירושלים",
+   "reference": "4163",
+   "notes": null,
+   "pdf": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/knesset_election82/he/Survey_4163.pdf",
+   "seats": {
+    "הליכוד": 21,
+    "ביחד": 12,
+    "ישר!": 24,
+    "הדמוקרטים": 9,
+    "בית ציוני – המילואימניקים": 4,
+    "הציונות הדתית": 5,
+    "עוצמה יהודית": 7,
+    "עמך ישראל": 4,
+    "ישראל ביתנו": 7,
+    "ש\"ס": 7,
+    "יהדות התורה": 8,
+    "הרשימה המשותפת": 7,
+    "רע\"ם": 5
+   },
+   "total": 120,
+   "percents": {
+    "הליכוד": 17.0,
+    "ביחד": 9.7,
+    "ישר!": 19.4,
+    "הדמוקרטים": 7.2,
+    "בית ציוני – המילואימניקים": 3.3,
+    "הציונות הדתית": 4.1,
+    "עוצמה יהודית": 5.7,
+    "עמך ישראל": 3.3,
+    "ישראל ביתנו": 5.7,
+    "ש\"ס": 5.7,
+    "יהדות התורה": 6.5,
+    "הרשימה המשותפת": 5.7,
+    "רע\"ם": 4.1
+   },
+   "percentTotal": 97.4,
+   "alsoFiled": [
+    {
+     "id": "knesset_election60",
+     "pdf": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/knesset_election60/he/Survey_4137.pdf"
+    }
+   ]
   },
   {
    "id": "knesset_election67",
@@ -3241,6 +3247,96 @@
     "עמך ישראל": 3.3
    },
    "percentTotal": 98.9
+  },
+  {
+   "id": "knesset_election83",
+   "date": "2026-09-24",
+   "fieldworkStart": "2026-09-23",
+   "fieldworkEnd": "2026-09-24",
+   "dateSource": "pdf",
+   "cecDate": "2026-09-23",
+   "published": "2026-09-27",
+   "pollster": "ד\"ר מנחם לזר",
+   "publisher": "עיתון מעריב",
+   "reference": "4164",
+   "notes": null,
+   "pdf": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/knesset_election83/he/Survey_4164.pdf",
+   "seats": {
+    "ישר!": 22,
+    "הליכוד": 18,
+    "ביחד": 13,
+    "הדמוקרטים": 11,
+    "ישראל ביתנו": 9,
+    "עוצמה יהודית": 9,
+    "הרשימה המשותפת": 7,
+    "יהדות התורה": 6,
+    "ש\"ס": 6,
+    "הציונות הדתית": 6,
+    "רע\"ם": 5,
+    "עמך ישראל": 4,
+    "בית ציוני – המילואימניקים": 4
+   },
+   "total": 120,
+   "percents": {
+    "ישר!": 15.9,
+    "הליכוד": 14.4,
+    "ביחד": 11.0,
+    "הדמוקרטים": 9.3,
+    "ישראל ביתנו": 7.7,
+    "עוצמה יהודית": 7.2,
+    "הרשימה המשותפת": 5.4,
+    "יהדות התורה": 5.0,
+    "ש\"ס": 5.0,
+    "הציונות הדתית": 4.8,
+    "רע\"ם": 4.4,
+    "עמך ישראל": 3.4,
+    "בית ציוני – המילואימניקים": 3.4
+   },
+   "percentTotal": 96.9
+  },
+  {
+   "id": "knesset_election84",
+   "date": "2026-09-24",
+   "fieldworkStart": "2026-09-24",
+   "fieldworkEnd": "2026-09-24",
+   "dateSource": "pdf",
+   "cecDate": "2026-09-24",
+   "published": "2026-09-28",
+   "pollster": "דיירקט פולס בע\"מ",
+   "publisher": "חדשות המזרח התיכון 24 בע\"מ",
+   "reference": "4165",
+   "notes": null,
+   "pdf": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/knesset_election84/he/Survey_4165.pdf",
+   "seats": {
+    "הליכוד": 27,
+    "ישר!": 22,
+    "ביחד": 9,
+    "הדמוקרטים": 9,
+    "עוצמה יהודית": 8,
+    "יהדות התורה": 8,
+    "הרשימה המשותפת": 7,
+    "ישראל ביתנו": 7,
+    "ש\"ס": 7,
+    "הציונות הדתית": 6,
+    "רע\"ם": 6,
+    "עמך ישראל": 4
+   },
+   "total": 120,
+   "percents": {
+    "הליכוד": 20.4,
+    "ישר!": 17.5,
+    "ביחד": 7.2,
+    "הדמוקרטים": 7.0,
+    "עוצמה יהודית": 6.6,
+    "יהדות התורה": 6.1,
+    "הרשימה המשותפת": 5.7,
+    "ישראל ביתנו": 5.6,
+    "ש\"ס": 5.3,
+    "הציונות הדתית": 4.4,
+    "רע\"ם": 4.4,
+    "עמך ישראל": 3.3
+   },
+   "percentTotal": 93.5
   }
  ],
  "excluded": [
@@ -3293,22 +3389,6 @@
    "reasonHe": "סקר מגזרי או תרחיש היפותטי - חלוקת המנדטים אינה ארצית"
   },
   {
-   "id": "knesset_election54",
-   "date": "2026-09-01",
-   "fieldworkStart": "2026-08-31",
-   "fieldworkEnd": "2026-09-01",
-   "dateSource": "pdf",
-   "cecDate": "2026-08-31",
-   "published": "2026-09-07",
-   "pollster": "דיאלוג",
-   "publisher": "ידיעות אחרונות",
-   "reference": "4124",
-   "notes": "נדרשו השלמות מעורך הסקר: נדרש לציין האם האחוזים שצויינו הינם גולמיים.",
-   "pdf": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/knesset_election54/he/%D7%A1%D7%A7%D7%A8%20%D7%91%D7%97%D7%99%D7%A8%D7%95%D7%AA%20%D7%9E%D7%99%D7%95%D7%9D%206.9.2026%204124.pdf",
-   "reason": "no 120-seat table found",
-   "reasonHe": "הפרסום אינו כולל תחזית מנדטים ארצית (סקר עמדות או סקר מגזרי)"
-  },
-  {
    "id": "knesset_election55",
    "date": "2026-09-01",
    "fieldworkStart": "2026-08-27",
@@ -3323,6 +3403,54 @@
    "pdf": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/knesset_election55/he/%D7%A1%D7%A7%D7%A8%20%D7%91%D7%97%D7%99%D7%A8%D7%95%D7%AA%20%D7%9E%D7%99%D7%95%D7%9D%207.9.2026%204126.pdf",
    "reason": "duplicate party rows - not a national projection",
    "reasonHe": "סקר מגזרי - התוצאות אינן תחזית מנדטים ארצית"
+  },
+  {
+   "id": "knesset_election54",
+   "date": "2026-09-02",
+   "fieldworkStart": "2026-08-31",
+   "fieldworkEnd": "2026-09-02",
+   "dateSource": "pdf",
+   "cecDate": "2026-08-31",
+   "published": "2026-09-07",
+   "pollster": "דיאלוג",
+   "publisher": "ידיעות אחרונות",
+   "reference": "4124",
+   "notes": null,
+   "pdf": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/knesset_election54/he/4124.pdf",
+   "reason": "no 120-seat table found",
+   "reasonHe": "הפרסום אינו כולל תחזית מנדטים ארצית (סקר עמדות או סקר מגזרי)"
+  },
+  {
+   "id": "knesset_election60",
+   "date": "2026-09-09",
+   "fieldworkStart": "2026-09-09",
+   "fieldworkEnd": "2026-09-09",
+   "dateSource": "pdf",
+   "cecDate": "2026-09-09",
+   "published": "2026-09-10",
+   "pollster": "קנטאר ישראל",
+   "publisher": "תאגיד השידור כאן , כנפי נשרים 23, ירושלים",
+   "reference": "4137",
+   "notes": null,
+   "pdf": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/knesset_election60/he/Survey_4137.pdf",
+   "reason": "duplicate filing of knesset_election82",
+   "reasonHe": "אותו סקר פורסם גם בתאגיד השידור כאן , כנפי נשרים 23, ירושלים ונספר פעם אחת"
+  },
+  {
+   "id": "knesset_election85",
+   "date": "2026-09-23",
+   "fieldworkStart": "2026-09-22",
+   "fieldworkEnd": "2026-09-23",
+   "dateSource": "pdf",
+   "cecDate": "2026-09-22",
+   "published": "2026-09-28",
+   "pollster": "דיאלוג",
+   "publisher": "ידיעות אחרונות",
+   "reference": "4166",
+   "notes": null,
+   "pdf": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/knesset_election85/he/Survey_4166.pdf",
+   "reason": "no 120-seat table found",
+   "reasonHe": "הפרסום אינו כולל תחזית מנדטים ארצית (סקר עמדות או סקר מגזרי)"
   }
  ]
 }

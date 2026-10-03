@@ -4,8 +4,8 @@
   "page": "https://www.gov.il/he/Departments/DynamicCollectors/knesset_election_polls_26"
  },
  "counts": {
-  "published": 86,
-  "parsed": 79,
+  "published": 87,
+  "parsed": 80,
   "excluded": 7,
   "withPercents": 68
  },
@@ -43,73 +43,73 @@
    "name": "הליכוד",
    "color": "#2563eb",
    "bloc": "netanyahu",
-   "polls": 79
+   "polls": 80
   },
   {
    "name": "ביחד",
    "color": "#14b8a6",
    "bloc": "opposition",
-   "polls": 79
+   "polls": 80
   },
   {
    "name": "ישר!",
    "color": "#f97316",
    "bloc": "opposition",
-   "polls": 79
+   "polls": 80
   },
   {
    "name": "הדמוקרטים",
    "color": "#e11d48",
    "bloc": "opposition",
-   "polls": 79
+   "polls": 80
   },
   {
    "name": "הציונות הדתית",
    "color": "#7c3aed",
    "bloc": "netanyahu",
-   "polls": 72
+   "polls": 73
   },
   {
    "name": "עוצמה יהודית",
    "color": "#a16207",
    "bloc": "netanyahu",
-   "polls": 79
+   "polls": 80
   },
   {
    "name": "ש\"ס",
    "color": "#111827",
    "bloc": "netanyahu",
-   "polls": 79
+   "polls": 80
   },
   {
    "name": "יהדות התורה",
    "color": "#6b7280",
    "bloc": "netanyahu",
-   "polls": 79
+   "polls": 80
   },
   {
    "name": "ישראל ביתנו",
    "color": "#0ea5e9",
    "bloc": "opposition",
-   "polls": 79
+   "polls": 80
   },
   {
    "name": "רע\"ם",
    "color": "#16a34a",
    "bloc": "arab",
-   "polls": 78
+   "polls": 79
   },
   {
    "name": "הרשימה המשותפת",
    "color": "#b91c1c",
    "bloc": "arab",
-   "polls": 79
+   "polls": 80
   },
   {
    "name": "עמך ישראל",
    "color": "#92400e",
    "bloc": "netanyahu",
-   "polls": 34
+   "polls": 35
   },
   {
    "name": "כחול לבן",
@@ -121,7 +121,7 @@
    "name": "בית ציוני – המילואימניקים",
    "color": "#0891b2",
    "bloc": "opposition",
-   "polls": 21
+   "polls": 22
   },
   {
    "name": "יסודות ישראל",
@@ -3410,6 +3410,36 @@
     "עמך ישראל": 3.3
    },
    "percentTotal": 93.5
+  },
+  {
+   "id": "knesset_election88",
+   "date": "2026-09-29",
+   "fieldworkStart": "2026-09-29",
+   "fieldworkEnd": "2026-09-29",
+   "dateSource": "pdf",
+   "cecDate": "2026-09-29",
+   "published": "2026-09-30",
+   "pollster": "מאגר מוחות",
+   "publisher": "ערוץ 16",
+   "reference": "4173",
+   "notes": null,
+   "pdf": "https://www.gov.il/BlobFolder/dynamiccollectorresultitem/knesset_election88/he/Survey_4173.pdf",
+   "seats": {
+    "ישר!": 21,
+    "הליכוד": 19,
+    "ביחד": 14,
+    "עוצמה יהודית": 8,
+    "ש\"ס": 8,
+    "הדמוקרטים": 9,
+    "יהדות התורה": 7,
+    "ישראל ביתנו": 7,
+    "הרשימה המשותפת": 7,
+    "רע\"ם": 5,
+    "הציונות הדתית": 6,
+    "עמך ישראל": 5,
+    "בית ציוני – המילואימניקים": 4
+   },
+   "total": 120
   }
  ],
  "excluded": [

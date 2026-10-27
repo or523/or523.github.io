@@ -615,3 +615,166 @@ a { color: var(--accent); }
   .panel-head { align-items: flex-start; }
   .table-wrap { max-height: 520px; }
 }
+
+/* ---------------- election-day forecast ---------------- */
+
+.panel-forecast {
+  background:
+    radial-gradient(120% 80% at 85% -10%, var(--accent-soft), transparent 60%),
+    var(--bg-elev);
+  border-block: 1px solid var(--line);
+  padding-top: 2.4rem;
+}
+
+.panel-forecast .panel-sub { max-width: 62ch; }
+.panel-forecast h3 {
+  margin: 0 0 .35rem;
+  font-size: 1.05rem;
+  letter-spacing: -.01em;
+}
+
+#forecast-national { margin-bottom: 1.6rem; }
+
+.forecast-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 1.6rem 2rem;
+  align-items: start;
+  margin-bottom: 1.8rem;
+}
+
+.forecast-variants {
+  display: grid;
+  gap: .85rem;
+  margin-top: .9rem;
+}
+
+.variant {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  padding: .7rem .85rem .6rem;
+}
+
+.variant-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: .45rem;
+}
+
+.variant-head strong { font-size: .95rem; letter-spacing: -.01em; }
+
+.variant-verdict {
+  font-size: .78rem;
+  font-weight: 700;
+  padding: .1rem .45rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.variant-verdict.yes { color: #15803d; background: rgba(22, 163, 74, .13); }
+.variant-verdict.no { color: #b91c1c; background: rgba(220, 38, 38, .12); }
+:root[data-theme="dark"] .variant-verdict.yes { color: #5fd58b; }
+:root[data-theme="dark"] .variant-verdict.no { color: #ff8e8e; }
+
+/* 120 seats across the full width, so the 61-seat line sits at the same
+   place in every bar and the variants can be compared by eye. */
+.variant-bar {
+  position: relative;
+  display: flex;
+  height: 22px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-sunk);
+}
+
+.variant-seg {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+}
+
+.majority-line {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  inset-inline-start: 50.833%; /* 61 of 120, measured from the right in RTL */
+  width: 2px;
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--bg-elev);
+}
+
+.variant-nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .15rem .9rem;
+  margin-top: .45rem;
+  font-size: .8rem;
+  color: var(--ink-soft);
+}
+
+.variant-nums span { display: inline-flex; align-items: center; gap: .3rem; }
+.variant-nums i { width: 9px; height: 9px; border-radius: 3px; }
+
+.variant-note {
+  margin: .35rem 0 0;
+  font-size: .78rem;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+
+.seg-small { margin: .9rem 0 .7rem; }
+.seg-small button { font-size: .82rem; padding: .28rem .7rem; }
+
+.forecast-table th[scope="row"] { white-space: nowrap; font-weight: 600; }
+.forecast-table .num { font-variant-numeric: tabular-nums; text-align: center; }
+.forecast-table .movement { font-variant-numeric: tabular-nums; font-weight: 700; }
+.forecast-table .movement.up { color: #15803d; }
+.forecast-table .movement.down { color: #b91c1c; }
+:root[data-theme="dark"] .forecast-table .movement.up { color: #5fd58b; }
+:root[data-theme="dark"] .forecast-table .movement.down { color: #ff8e8e; }
+
+.forecast-table .chip {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-inline-end: .4rem;
+  vertical-align: baseline;
+}
+
+.forecast-table .total-row th,
+.forecast-table .total-row td {
+  border-top: 2px solid var(--line-strong);
+  font-weight: 800;
+}
+
+.forecast-notes { margin-top: 1.5rem; }
+.forecast-notes .excluded-body p { margin: .5rem 0; line-height: 1.65; }
+
+@media (max-width: 900px) {
+  .forecast-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.variant-legend {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  margin: 0 0 .2rem;
+  font-size: .78rem;
+  color: var(--ink-faint);
+}
+
+.majority-key {
+  flex: none;
+  width: 2px;
+  height: 14px;
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--bg-elev);
+}

@@ -790,6 +790,7 @@ function setupTheme() {
     applyPartyColors();
     renderAll();
     renderCoalition();
+    if (typeof renderForecast === 'function') renderForecast();
   });
 }
 
@@ -817,6 +818,9 @@ async function init() {
   renderExcluded();
   renderAll();
   setupCoalition();
+  // The election-day panel lives in forecast.js and needs the party colours
+  // resolved above; it is absent, and the panel stays hidden, on other days.
+  if (typeof initForecast === 'function') initForecast();
 }
 
 /* ---------------- coalition panel ---------------- */

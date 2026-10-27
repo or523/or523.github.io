@@ -21,6 +21,7 @@
       </div>
     </div>
     <nav class="site-nav">
+      <a href="#live">ספירת הקולות</a>
       <a href="#forecast">תחזית</a>
       <a href="#trends">מגמות</a>
       <a href="#coalition">קואליציה</a>
@@ -42,6 +43,75 @@
         שמפרסמים עורכי הסקרים מפוענחים לטבלת מנדטים אחידה.
       </p>
       <div id="hero-stats" class="hero-stats"></div>
+    </div>
+  </section>
+
+  <section id="live" class="panel panel-live" hidden>
+    <div class="wrap">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">הלילה</p>
+          <h2>ספירת הקולות בזמן אמת</h2>
+          <p class="panel-sub">
+            התוצאות הרשמיות כפי שוועדת הבחירות מפרסמת אותן, נצבעות כל עשר דקות
+            לצילום מצב. הוועדה מפרסמת רק את המצב העכשווי ומוחקת את הקודם, ולכן
+            הסדרה הזו — איך נראתה הספירה בכל שעה של הלילה — נבנית כאן ולא קיימת
+            בשום מקום אחר.
+          </p>
+        </div>
+        <div class="head-controls">
+          <div class="seg seg-small" id="live-modes" role="group" aria-label="תצוגת הגרף"></div>
+        </div>
+      </div>
+
+      <div id="live-stats" class="hero-stats"></div>
+
+      <div id="live-bar" class="live-bar"></div>
+
+      <h3>איך זזו המנדטים במהלך הלילה</h3>
+      <figure class="chart-card">
+        <div id="live-chart" class="chart"></div>
+        <div id="live-legend" class="live-legend"></div>
+        <figcaption class="chart-note">
+          כל נקודה היא צילום מצב של הספירה הרשמית. הזמן זורם מימין לשמאל, כמו
+          בגרף המגמות.
+        </figcaption>
+      </figure>
+
+      <h3>התוצאות עכשיו</h3>
+      <div class="table-wrap">
+        <table id="live-table" class="polls-table live-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <details class="excluded forecast-notes">
+        <summary>למה המספרים האלה קופצים כל כך</summary>
+        <div class="excluded-body">
+          <p>
+            <strong>הקלפיות הראשונות אינן מדגם מקרי.</strong> נספרות קודם הקטנות —
+            יישובים קהילתיים, קיבוצים ומושבים — וערים גדולות, שכונות חרדיות ויישובים
+            ערביים מגיעים מאוחר בהרבה. לכן התמונה בתחילת הלילה מוטה בחדות, ולא בגלל
+            טעות: זה באמת מה שנספר עד כה.
+          </p>
+          <p>
+            <strong>מעטפות חיצוניות נספרות אחרונות.</strong> כ-10% מהקולות — חיילים,
+            אסירים, צוותי רפואה ונציגים בחו"ל — נספרים בוועדה המרכזית בימים שאחרי,
+            ואינם בנתונים כאן כל עוד לא נספרו.
+          </p>
+          <p>
+            <strong>המנדטים מחושבים מחדש בכל צילום מצב</strong> — אחוז חסימה של 3.25%
+            מהקולות הכשרים שנספרו, וחלוקה בשיטת בדר-עופר (ד'הונט). רשימה שחוצה את
+            האחוז בספירה חלקית עשויה ליפול כשהערים ייספרו, ולהפך. הסכמי עודפים אינם
+            מודלים.
+          </p>
+          <p>
+            <strong>אלה אינן התוצאות הסופיות.</strong> ועדת הבחירות מפרסמת את התוצאות
+            הרשמיות ברשומות עד 4 בנובמבר 2026, ועד אז הן עשויות להשתנות.
+          </p>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -277,5 +347,6 @@
 <div id="tooltip" class="tooltip" hidden></div>
 <script src="app.js"></script>
 <script src="forecast.js"></script>
+<script src="live.js"></script>
 </body>
 </html>

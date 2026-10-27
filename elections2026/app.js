@@ -791,6 +791,7 @@ function setupTheme() {
     renderAll();
     renderCoalition();
     if (typeof renderForecast === 'function') renderForecast();
+    if (typeof renderLive === 'function') renderLive();
   });
 }
 
@@ -821,6 +822,9 @@ async function init() {
   // The election-day panel lives in forecast.js and needs the party colours
   // resolved above; it is absent, and the panel stays hidden, on other days.
   if (typeof initForecast === 'function') initForecast();
+  // The live count panel lives in live.js and is likewise absent except on the
+  // night the votes are actually being counted.
+  if (typeof initLive === 'function') initLive();
 }
 
 /* ---------------- coalition panel ---------------- */

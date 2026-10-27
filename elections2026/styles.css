@@ -778,3 +778,48 @@ a { color: var(--accent); }
   background: var(--ink);
   box-shadow: 0 0 0 1px var(--bg-elev);
 }
+
+/* ------------------------------------------------- the live count panel */
+
+.panel-live {
+  background: var(--bg-sunk);
+  border-top: 1px solid var(--line);
+}
+
+.live-bar { margin: 18px 0 8px; }
+.live-bar .variant { max-width: 860px; }
+
+.live-table td.num { font-variant-numeric: tabular-nums; }
+.live-table tr.below th,
+.live-table tr.below td { opacity: .62; }
+
+.delta {
+  margin-inline-start: 6px;
+  font-size: .78em;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.delta.up { color: #16a34a; }
+.delta.down { color: #dc2626; }
+
+
+.live-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.1rem;
+  margin: .6rem 0 .2rem;
+}
+.live-key {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .84rem;
+  color: var(--ink-soft);
+}
+.live-key i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.live-key strong { color: var(--ink); font-variant-numeric: tabular-nums; }

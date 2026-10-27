@@ -1,0 +1,337 @@
+{
+ "generated": "2026-10-28T00:40:06+02:00",
+ "source": "https://votes26.bechirot.gov.il/",
+ "seatsTotal": 120,
+ "threshold": 0.0325,
+ "expectedVoters": 5695682,
+ "lists": [
+  {
+   "letters": "מחל",
+   "name": "הליכוד",
+   "canonical": "הליכוד",
+   "bloc": "netanyahu",
+   "color": "#2563eb"
+  },
+  {
+   "letters": "ט",
+   "name": "הציונות הדתית",
+   "canonical": "הציונות הדתית",
+   "bloc": "netanyahu",
+   "color": "#7c3aed"
+  },
+  {
+   "letters": "דרך",
+   "name": "ישר!",
+   "canonical": "ישר!",
+   "bloc": "opposition",
+   "color": "#f97316"
+  },
+  {
+   "letters": "ב",
+   "name": "עוצמה יהודית",
+   "canonical": "עוצמה יהודית",
+   "bloc": "netanyahu",
+   "color": "#a16207"
+  },
+  {
+   "letters": "אמת",
+   "name": "הדמוקרטים",
+   "canonical": "הדמוקרטים",
+   "bloc": "opposition",
+   "color": "#e11d48"
+  },
+  {
+   "letters": "רק",
+   "name": "ביחד",
+   "canonical": "ביחד",
+   "bloc": "opposition",
+   "color": "#14b8a6"
+  },
+  {
+   "letters": "שס",
+   "name": "ש\"ס",
+   "canonical": "ש\"ס",
+   "bloc": "netanyahu",
+   "color": "#111827"
+  },
+  {
+   "letters": "די",
+   "name": "המילואימניקים והכלכלית",
+   "canonical": "בית ציוני – המילואימניקים",
+   "bloc": "opposition",
+   "color": "#0891b2"
+  },
+  {
+   "letters": "ל",
+   "name": "ישראל ביתנו",
+   "canonical": "ישראל ביתנו",
+   "bloc": "opposition",
+   "color": "#0ea5e9"
+  },
+  {
+   "letters": "ך",
+   "name": "עמך ישראל",
+   "canonical": "עמך ישראל",
+   "bloc": "netanyahu",
+   "color": "#92400e"
+  },
+  {
+   "letters": "ג",
+   "name": "יהדות התורה",
+   "canonical": "יהדות התורה",
+   "bloc": "netanyahu",
+   "color": "#6b7280"
+  },
+  {
+   "letters": "ני",
+   "name": "נעם",
+   "canonical": null,
+   "bloc": "netanyahu",
+   "color": "#64748b"
+  },
+  {
+   "letters": "עם",
+   "name": "רע\"ם",
+   "canonical": "רע\"ם",
+   "bloc": "arab",
+   "color": "#16a34a"
+  },
+  {
+   "letters": "ודם",
+   "name": "הרשימה המשותפת",
+   "canonical": "הרשימה המשותפת",
+   "bloc": "arab",
+   "color": "#b91c1c"
+  },
+  {
+   "letters": "זך",
+   "name": "הציבור החרדי",
+   "canonical": "הציבור החרדי",
+   "bloc": "netanyahu",
+   "color": "#a3a3a3"
+  },
+  {
+   "letters": "כן",
+   "name": "כחול לבן",
+   "canonical": "כחול לבן",
+   "bloc": "opposition",
+   "color": "#1d4ed8"
+  },
+  {
+   "letters": "י",
+   "name": "ישראל תחילה",
+   "canonical": null,
+   "bloc": null,
+   "color": "#737373"
+  },
+  {
+   "letters": "בקר",
+   "name": "אורות השחר",
+   "canonical": null,
+   "bloc": null,
+   "color": "#8b8b8b"
+  },
+  {
+   "letters": "ד",
+   "name": "השותפות לכולם",
+   "canonical": null,
+   "bloc": null,
+   "color": "#525252"
+  },
+  {
+   "letters": "בי",
+   "name": "צומת בית ישראל",
+   "canonical": null,
+   "bloc": null,
+   "color": "#64748b"
+  },
+  {
+   "letters": "פה",
+   "name": "אני ואתה",
+   "canonical": null,
+   "bloc": null,
+   "color": "#a3a3a3"
+  },
+  {
+   "letters": "ז",
+   "name": "בטח",
+   "canonical": null,
+   "bloc": null,
+   "color": "#737373"
+  },
+  {
+   "letters": "נץ",
+   "name": "ביטחון אישי",
+   "canonical": null,
+   "bloc": null,
+   "color": "#8b8b8b"
+  },
+  {
+   "letters": "זץ",
+   "name": "ברית עולם לגאולת ישראל",
+   "canonical": null,
+   "bloc": null,
+   "color": "#525252"
+  },
+  {
+   "letters": "יק",
+   "name": "הגוש התנ\"כי",
+   "canonical": null,
+   "bloc": null,
+   "color": "#64748b"
+  },
+  {
+   "letters": "ה",
+   "name": "גן עדן",
+   "canonical": null,
+   "bloc": null,
+   "color": "#a3a3a3"
+  },
+  {
+   "letters": "צף",
+   "name": "הפיראטים",
+   "canonical": null,
+   "bloc": null,
+   "color": "#737373"
+  },
+  {
+   "letters": "רץ",
+   "name": "הקהל",
+   "canonical": null,
+   "bloc": null,
+   "color": "#8b8b8b"
+  },
+  {
+   "letters": "נקי",
+   "name": "התיקון לשיטת הבחירות והממשל",
+   "canonical": null,
+   "bloc": null,
+   "color": "#525252"
+  },
+  {
+   "letters": "בד",
+   "name": "ביחד נצליח",
+   "canonical": null,
+   "bloc": null,
+   "color": "#64748b"
+  },
+  {
+   "letters": "קץ",
+   "name": "משפט צדק",
+   "canonical": null,
+   "bloc": null,
+   "color": "#a3a3a3"
+  },
+  {
+   "letters": "קך",
+   "name": "סדר חדש",
+   "canonical": null,
+   "bloc": null,
+   "color": "#737373"
+  },
+  {
+   "letters": "נר",
+   "name": "צבע שחור",
+   "canonical": null,
+   "bloc": null,
+   "color": "#8b8b8b"
+  },
+  {
+   "letters": "קה",
+   "name": "קול הנשים",
+   "canonical": null,
+   "bloc": null,
+   "color": "#525252"
+  },
+  {
+   "letters": "נף",
+   "name": "שמע",
+   "canonical": null,
+   "bloc": null,
+   "color": "#64748b"
+  },
+  {
+   "letters": "צדק",
+   "name": "שרשר",
+   "canonical": null,
+   "bloc": null,
+   "color": "#a3a3a3"
+  },
+  {
+   "letters": "צבי",
+   "name": "תנועת אחי",
+   "canonical": null,
+   "bloc": null,
+   "color": "#737373"
+  },
+  {
+   "letters": "ק",
+   "name": "תקומה",
+   "canonical": null,
+   "bloc": null,
+   "color": "#8b8b8b"
+  }
+ ],
+ "snapshots": [
+  {
+   "ts": "2026-10-28T00:31:44+02:00",
+   "ballots": 15,
+   "localities": 15,
+   "register": 3526,
+   "voters": 2670,
+   "invalid": 9,
+   "valid": 2661,
+   "votes": {
+    "אמת": 215,
+    "ב": 223,
+    "בי": 1,
+    "בקר": 1,
+    "ג": 27,
+    "ד": 1,
+    "די": 93,
+    "דרך": 442,
+    "ודם": 1,
+    "זך": 2,
+    "ט": 448,
+    "י": 2,
+    "ך": 78,
+    "ל": 85,
+    "מחל": 719,
+    "ני": 19,
+    "עם": 3,
+    "רק": 173,
+    "שס": 128
+   },
+   "seats": {
+    "אמת": 11,
+    "ב": 11,
+    "די": 4,
+    "דרך": 22,
+    "ט": 22,
+    "מחל": 36,
+    "רק": 8,
+    "שס": 6
+   },
+   "passed": [
+    "אמת",
+    "ב",
+    "די",
+    "דרך",
+    "ט",
+    "מחל",
+    "רק",
+    "שס"
+   ],
+   "blocSeats": {
+    "opposition": 45,
+    "netanyahu": 75
+   },
+   "blocVotes": {
+    "opposition": 1008,
+    "netanyahu": 1644,
+    "arab": 4
+   },
+   "progress": 0.00046877617114157705
+  }
+ ]
+}

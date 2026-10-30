@@ -303,6 +303,9 @@ async function initLive() {
   liveState.data = data;
   el('live').hidden = false;
   renderLive();
+  // The Bader-Ofer walkthrough reads the same dataset; it lives in its own file
+  // because it is an explanation of this panel's numbers rather than part of it.
+  if (typeof initSeatMath === 'function') initSeatMath(data);
 
   // A browser left open overnight should keep up on its own.
   if (liveState.timer) clearInterval(liveState.timer);
@@ -311,6 +314,7 @@ async function initLive() {
     if (fresh && fresh.generated !== liveState.data.generated) {
       liveState.data = fresh;
       renderLive();
+      if (typeof initSeatMath === 'function') initSeatMath(fresh);
     }
   }, LIVE_REFRESH_MS);
 }

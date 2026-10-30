@@ -716,6 +716,10 @@ function setupNav() {
     const line = window.scrollY + window.innerHeight * 0.35;
     let current = null;
     links.forEach((entry) => {
+      // A panel still waiting for its data is hidden and has no position at
+      // all; without this it reports a top of 0 and claims the highlight from
+      // whatever is actually in view.
+      if (entry.section.hidden) return;
       const top = entry.section.getBoundingClientRect().top + window.scrollY;
       if (top <= line) current = entry;
     });

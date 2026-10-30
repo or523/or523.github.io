@@ -614,6 +614,17 @@ a { color: var(--accent); }
   .hero { padding: 2.6rem 0 1.5rem; }
   .panel-head { align-items: flex-start; }
   .table-wrap { max-height: 520px; }
+
+  /* The nav does not fit on a phone. Letting it scroll keeps every section
+     reachable; without `min-width: 0` a flex item refuses to shrink below its
+     content, and the header would set the width of the whole page. */
+  .site-nav {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .site-nav::-webkit-scrollbar { display: none; }
+  .site-nav a { white-space: nowrap; }
 }
 
 /* ---------------- election-day forecast ---------------- */
@@ -823,3 +834,199 @@ a { color: var(--accent); }
   display: inline-block;
 }
 .live-key strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------ the Bader-Ofer walkthrough */
+
+.panel-seats { border-top: 1px solid var(--line); }
+.panel-seats .panel-sub { max-width: 68ch; }
+
+.seat-math {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 1.4rem;
+}
+
+.step {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.3rem 1.35rem;
+  box-shadow: var(--shadow);
+}
+
+.step-head {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  margin-bottom: .5rem;
+}
+.step-head h3 {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: -.015em;
+}
+.step-num {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: .85rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.step-text { margin: .3rem 0 .85rem; color: var(--ink-soft); max-width: 72ch; }
+.step-text strong { color: var(--ink); }
+.step-note {
+  margin: .75rem 0 0;
+  font-size: .86rem;
+  color: var(--ink-faint);
+  max-width: 72ch;
+}
+.step-note strong { color: var(--ink-soft); }
+.step-note.warn { color: #b45309; }
+.warn-text { color: #b91c1c; }
+
+/* The quota, set out as the division it is. */
+.formula {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  /* The division reads left to right even in a right-to-left page: these are
+     digits and an operator, not words. */
+  direction: ltr;
+}
+.formula .op { color: var(--ink-faint); }
+.formula strong { font-size: 1.3rem; font-weight: 800; letter-spacing: -.02em; }
+.formula .unit { font-size: .82rem; color: var(--ink-faint); direction: rtl; }
+
+.seat-table { font-size: .9rem; }
+.seat-table th[scope="row"] { white-space: nowrap; font-weight: 600; }
+.seat-table .num { font-variant-numeric: tabular-nums; text-align: center; }
+.seat-table .num.strong { font-weight: 800; }
+.seat-table .num.muted { color: var(--ink-faint); }
+/* "1,457,909 ÷ 33" is a division, and the operator between two numbers is a
+   neutral character: left in the page's own direction it is reordered on
+   screen into "33 ÷ 1,457,909", which says something else entirely. */
+.seat-table .calc { direction: ltr; unicode-bidi: isolate; }
+.seat-table .takes {
+  font-size: .78rem;
+  font-weight: 700;
+  color: #15803d;
+  white-space: nowrap;
+}
+.seat-table tr.wins th[scope="row"],
+.seat-table tr.wins td { background: rgba(22, 163, 74, .08); }
+.seat-table .chip.static {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  display: inline-block;
+  margin-inline-end: 6px;
+  vertical-align: baseline;
+}
+
+.pair-tag {
+  margin-inline-start: .45rem;
+  padding: .05rem .4rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: .68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* One card per seat still to be handed out, and one per pair being split. */
+.leftovers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: .9rem;
+}
+.leftover {
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: .8rem .9rem .9rem;
+  min-width: 0;
+}
+.leftover .table-wrap { border: 0; background: none; box-shadow: none; }
+.leftover-head {
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-bottom: .2rem;
+}
+.leftover-head strong { font-size: .95rem; letter-spacing: -.01em; }
+.leftover-head span { font-size: .82rem; color: var(--ink-faint); }
+.leftover .step-note { margin-top: .4rem; }
+
+.callout {
+  margin: 1rem 0 0;
+  padding: .85rem 1rem;
+  background: var(--accent-soft);
+  border-inline-start: 3px solid var(--accent);
+  border-radius: 10px;
+  font-size: .9rem;
+  color: var(--ink-soft);
+  max-width: 76ch;
+}
+.callout strong { color: var(--ink); }
+
+.cf-blocs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem .9rem;
+  margin: .2rem 0 .1rem;
+}
+.cf-bloc {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .88rem;
+  color: var(--ink-soft);
+}
+.cf-bloc i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.cf-bloc strong { font-variant-numeric: tabular-nums; color: var(--ink); }
+.cf-bloc em {
+  font-style: normal;
+  font-size: .78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.cf-bloc em.up { color: #16a34a; }
+.cf-bloc em.down { color: #dc2626; }
+.cf-bloc em.same { color: var(--ink-faint); font-weight: 600; }
+
+@media (max-width: 720px) {
+  .step { padding: 1rem 1rem 1.15rem; }
+  .leftovers { grid-template-columns: 1fr; }
+  .seat-table { font-size: .84rem; }
+  /* A paired name is two party names and a plus sign. Holding it on one line
+     is what pushes these tables into sideways scrolling on a phone, and the
+     numbers beside it are the part worth keeping in view. */
+  .seat-table th[scope="row"] { white-space: normal; }
+  /* Seven pixels over the card is still a sideways scroll. The numbers must
+     not wrap, so the room comes out of the gutters instead. */
+  .seat-table th,
+  .seat-table td { padding: .45rem .35rem; }
+}
+
+/* The seat a pair's leftover won, shown beside the whole-quota figure. */
+.seat-table .plus { color: #15803d; font-weight: 700; font-size: .85em; }

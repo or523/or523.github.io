@@ -1,9 +1,31 @@
 {
- "generated": "2026-10-30T14:13:05+02:00",
+ "generated": "2026-10-30T19:22:14+02:00",
  "source": "https://votes26.bechirot.gov.il/",
  "seatsTotal": 120,
  "threshold": 0.0325,
  "expectedVoters": 5695682,
+ "agreements": [
+  [
+   "מחל",
+   "ט"
+  ],
+  [
+   "שס",
+   "ג"
+  ],
+  [
+   "דרך",
+   "אמת"
+  ],
+  [
+   "רק",
+   "ל"
+  ],
+  [
+   "עם",
+   "ודם"
+  ]
+ ],
  "lists": [
   {
    "letters": "מחל",

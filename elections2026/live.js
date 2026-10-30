@@ -43,9 +43,12 @@ function renderLiveStats() {
     {
       label: 'קולות שנספרו',
       value: liveInt.format(latest.voters),
-      note: latest.progress
-        ? `${liveShare(latest.progress)} מהקולות, לפי אומדן ההצבעה של 22:00`
-        : 'מתוך כלל הקולות',
+      // Until the count overtook it, the denominator was the 22:00 turnout
+      // estimate and the figure was an approximation worth labelling as one.
+      // At 100% the count is its own denominator and the estimate is behind us.
+      note: !latest.progress ? 'מתוך כלל הקולות'
+        : latest.progress >= 0.9999 ? 'כל הקולות שנספרו, כולל המעטפות החיצוניות'
+        : `${liveShare(latest.progress)} מהקולות, לפי אומדן ההצבעה של 22:00`,
     },
     {
       label: 'קלפיות שנספרו',

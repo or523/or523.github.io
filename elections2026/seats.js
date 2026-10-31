@@ -14,11 +14,13 @@
    Every quantity is a whole number of votes well below 2^31, so the products
    are exact and so are the comparisons.
 
-   Surplus agreements (הסכמי עודפים) are not a correction applied at the end.
-   Two signatory lists are a single list for the whole apportionment and come
-   apart only in the final step, which is why the trace works on "units" rather
-   than on lists. Which lists were paired cannot be recovered from the seat
-   counts, so it is carried in the dataset.
+   Surplus agreements (הסכמי עודפים) enter at one specific stage and not
+   before it. Every list takes its own whole quotas alone; only then do two
+   signatories become a single body, for the seats the quota left over. That
+   ordering is the law's -- see `seatTrace` -- and getting it wrong does not
+   change the 120 seats, but it does change what the page claims the law says.
+   Which lists were paired cannot be recovered from the seat counts, so it is
+   carried in the dataset.
 
    The result is checked against the seat counts the build already computed, by
    a different implementation of the same law in another language. If the two
@@ -45,35 +47,27 @@ const seatLabel = (names, members) => members
 
 /* --------------------------------------------------------------- the maths */
 
-/** Seats for a set of units by quota and largest measure, recording each step.
+/** Hand out seats one at a time to the largest votes/(seats+1).
 
-    This is the method the law describes: every unit takes the whole number of
-    times the quota goes into its votes, and the seats left over by all that
-    rounding down go one at a time to the largest votes/(seats+1). It reaches
-    the same allocation as plain d'Hondt -- which is how `results_build.py`
-    computes it -- but d'Hondt gives no account of itself, and the account is
-    the whole point here. */
-function apportionTrace(units, seats) {
-  const pot = units.reduce((sum, unit) => sum + unit.votes, 0);
-  units.forEach((unit) => {
-    unit.seats = Math.floor((unit.votes * seats) / pot);
-    // `seats` is mutated as the leftover seats are handed out below, so the
-    // first-round figure has to be kept separately: a table that showed the
-    // final count under the heading "whole times the quota goes in" would
-    // contradict the sentence under it.
-    unit.base = unit.seats;
-  });
-  const firstRound = units.reduce((sum, unit) => sum + unit.seats, 0);
+    This is section 81(ד), the Bader-Ofer amendment itself, and it is used twice:
+    once among the bodies competing for the seats the quota left over, and again
+    inside a linked pair to settle which partner keeps what the pair won.
+
+    `bodies` are mutated -- each gains the seats it wins -- and one record per
+    seat is returned, holding every contender's measure at the moment that seat
+    was decided, so the page can show the contest and not just its outcome. */
+function shareOutRemainder(bodies, seats) {
+  const held = () => bodies.reduce((sum, body) => sum + body.seats, 0);
   const rounds = [];
-  for (let left = seats - firstRound; left > 0; left -= 1) {
-    const ranked = [...units].sort((a, b) => (b.votes * (a.seats + 1))
+  while (held() < seats) {
+    const ranked = [...bodies].sort((a, b) => (b.votes * (a.seats + 1))
       - (a.votes * (b.seats + 1)));
     const winner = ranked[0];
     const second = ranked[1];
     rounds.push({
-      ranked: ranked.map((unit) => ({
-        unit, votes: unit.votes, over: unit.seats + 1,
-        measure: unit.votes / (unit.seats + 1),
+      ranked: ranked.map((body) => ({
+        body, votes: body.votes, over: body.seats + 1,
+        measure: body.votes / (body.seats + 1),
       })),
       winner,
       second,
@@ -89,10 +83,22 @@ function apportionTrace(units, seats) {
     });
     winner.seats += 1;
   }
-  return { pot, quota: pot / seats, firstRound, rounds };
+  return rounds;
 }
 
-/** The whole apportionment of one snapshot, as a readable trace. */
+/** The whole apportionment of one snapshot, as a readable trace.
+
+    The order of the two stages is the law's, not a presentational choice.
+    Section 67(א) says an agreement between two lists has no effect except the
+    one section 82 gives it, and section 82 makes the pair a single list only
+    "לענין חלוקת המנדטים לפי סעיף 81(ד)" -- the seats left over. So every list
+    takes its own whole quotas alone first, and the pairing begins after that.
+
+    Combining the pair's votes before the quota instead reaches the same 120
+    seats by a shorter route, because the quota floor can never exceed what
+    d'Hondt gives a body; `pairedFirstRound` records what that route would have
+    reported, since a reader who has seen that number elsewhere deserves to
+    find it here rather than conclude one of the two is wrong. */
 function seatTrace(snapshot, data) {
   const total = data.seatsTotal;
   const threshold = data.threshold;
@@ -104,39 +110,59 @@ function seatTrace(snapshot, data) {
     if (count > 0) (count / valid >= threshold ? passing : failing)[key] = count;
   });
 
+  // Section 81: the quota, and the whole number of times it goes into each
+  // list's own votes. No list is yet paired with any other.
+  const pot = Object.keys(passing).reduce((sum, key) => sum + passing[key], 0);
+  const quota = pot / total;
+  const base = {};
+  Object.keys(passing).forEach((key) => {
+    base[key] = Math.floor((passing[key] * total) / pot);
+  });
+  const firstRound = Object.keys(base).reduce((sum, key) => sum + base[key], 0);
+
+  // Section 82: only now do linked lists become one body, carrying in both
+  // their votes and the seats they have each already won.
   const pairs = (data.agreements || [])
     .filter(([one, two]) => passing[one] && passing[two]);
   const paired = new Set(pairs.reduce((all, pair) => all.concat(pair), []));
-  const units = pairs
-    .map(([one, two]) => ({ members: [one, two], votes: passing[one] + passing[two] }))
+  const bodies = pairs
+    .map(([one, two]) => ({
+      members: [one, two],
+      votes: passing[one] + passing[two],
+      seats: base[one] + base[two],
+    }))
     .concat(Object.keys(passing).filter((key) => !paired.has(key))
-      .map((key) => ({ members: [key], votes: passing[key] })))
+      .map((key) => ({ members: [key], votes: passing[key], seats: base[key] })))
     .sort((a, b) => b.votes - a.votes);
+  bodies.forEach((body) => { body.entry = body.seats; });
+  const pairedFirstRound = bodies
+    .reduce((sum, body) => sum + Math.floor((body.votes * total) / pot), 0);
 
-  const main = apportionTrace(units, total);
+  const rounds = shareOutRemainder(bodies, total);
 
-  // Each pair now divides what it won between its two members by the very same
-  // method: the pair's own votes over the pair's own seats is the inner quota,
-  // and a seat left over goes to the larger measure.
+  // Section 82 again: what a pair won together is then settled between its two
+  // members by that same rule, each starting from its own first-round seats.
   const splits = [];
   const seats = {};
-  units.forEach((unit) => {
-    if (unit.members.length === 1) {
-      seats[unit.members[0]] = unit.seats;
+  bodies.forEach((body) => {
+    if (body.members.length === 1) {
+      seats[body.members[0]] = body.seats;
       return;
     }
-    const inner = unit.members
-      .map((key) => ({ members: [key], votes: passing[key] }))
+    const inner = body.members
+      .map((key) => ({
+        members: [key], votes: passing[key], seats: base[key], entry: base[key],
+      }))
       .sort((a, b) => b.votes - a.votes);
-    const inside = apportionTrace(inner, unit.seats);
+    const innerRounds = shareOutRemainder(inner, body.seats);
     inner.forEach((one) => { seats[one.members[0]] = one.seats; });
-    splits.push({ unit, inner, inside });
+    splits.push({ body, inner, innerRounds });
   });
 
   const lost = Object.keys(failing).reduce((sum, key) => sum + failing[key], 0);
   return {
-    passing, failing, lost, pairs, units, main, splits, seats, valid, total,
-    threshold,
+    passing, failing, lost, pairs, bodies, base, pot, quota, firstRound,
+    pairedFirstRound, rounds, splits, seats, valid, total, threshold,
   };
 }
 
@@ -159,8 +185,8 @@ function seatInversion(trace) {
 
 /* ------------------------------------------------------------- the markup */
 
-function seatTable(head, rows) {
-  return `<div class="table-wrap"><table class="polls-table seat-table">
+function seatTable(head, rows, extra = '') {
+  return `<div class="table-wrap"><table class="polls-table seat-table ${extra}">
     <thead><tr>${head.map((cell) => `<th scope="col">${cell}</th>`).join('')}</tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
@@ -197,7 +223,7 @@ function seatThresholdStep(trace, names) {
 }
 
 function seatQuotaStep(trace) {
-  const { pot, quota } = trace.main;
+  const { pot, quota } = trace;
   return {
     title: 'המודד הכללי',
     body: `
@@ -222,36 +248,42 @@ function seatQuotaStep(trace) {
 }
 
 function seatFirstRoundStep(trace, names) {
-  const { quota, firstRound } = trace.main;
+  const { quota, firstRound, pairedFirstRound } = trace;
   const left = trace.total - firstRound;
-  const rows = trace.units.map((unit) => `<tr>
-      <th scope="row">${attr(seatLabel(names, unit.members))}${unit.members.length > 1
-    ? '<span class="pair-tag">הסכם עודפים</span>' : ''}</th>
-      <td class="num">${seatInt.format(unit.votes)}</td>
-      <td class="num muted">${seatFix(unit.votes / quota, 3)}</td>
-      <td class="num strong">${unit.base}</td>
+  const rows = Object.keys(trace.base)
+    .sort((a, b) => trace.passing[b] - trace.passing[a])
+    .map((key) => `<tr>
+      <th scope="row">${attr(seatName(names, key))}</th>
+      <td class="num">${seatInt.format(trace.passing[key])}</td>
+      <td class="num muted">${seatFix(trace.passing[key] / quota, 3)}</td>
+      <td class="num strong">${trace.base[key]}</td>
     </tr>`).join('');
   return {
     title: 'הסיבוב הראשון',
     body: `
     <p class="step-text">
       כל רשימה מקבלת את <strong>המספר השלם</strong> של הפעמים שהמודד נכנס
-      בקולות שלה.${!trace.pairs.length ? '' : ` וכאן נכנסים הסכמי העודפים: שני
-      חותמים על הסכם מחולקים <strong>כגוף אחד</strong> לכל אורך החישוב,
-      ומתפצלים ביניהם רק בשלב האחרון.`}
+      בקולות שלה. ${!trace.pairs.length ? '' : `בשלב הזה <strong>הסכמי העודפים
+      עדיין לא נכנסו לתמונה</strong> — כל רשימה עומדת לבדה, גם אם חתמה.`}
     </p>
-    ${seatTable([trace.pairs.length ? 'גוף' : 'רשימה', 'קולות', 'חלקי המודד',
-    'מנדטים'], rows)}
+    ${seatTable(['רשימה', 'קולות', 'חלקי המודד', 'מנדטים'], rows)}
     <p class="step-note">
       סך הכול <strong>${firstRound} מנדטים</strong>. השברים נזרקו, ולכן
       <strong>${left === 1 ? 'מנדט אחד נותר' : `${left} מנדטים נותרו`}</strong>
       לחלוקה.
-    </p>`,
+    </p>
+    ${pairedFirstRound === firstRound ? '' : `<p class="step-note">
+      יש מי שמציג כאן <strong>${pairedFirstRound}</strong> ולא
+      ${firstRound}, בחישוב שמחבר את קולות הזוגות כבר בשלב הזה. שתי הדרכים
+      מגיעות לאותה חלוקה סופית, אבל סעיף 67(א) קובע שלהסכם אין תוצאה מלבד זו
+      שבסעיף 82, וסעיף 82 מצרף את החותמות לרשימה אחת רק
+      <em>לעניין חלוקת המנדטים לפי סעיף 81(ד)</em> — כלומר רק לשלב הבא.
+    </p>`}`,
   };
 }
 
 function seatLeftoverStep(trace, names) {
-  const { rounds } = trace.main;
+  const { rounds } = trace;
   if (!rounds.length) {
     return {
       title: 'המנדטים הנותרים',
@@ -261,9 +293,9 @@ function seatLeftoverStep(trace, names) {
   }
   const cards = rounds.map((round, index) => {
     const rows = round.ranked.map((entry) => {
-      const wins = entry.unit === round.winner;
+      const wins = entry.body === round.winner;
       return `<tr class="${wins ? 'wins' : ''}">
-        <th scope="row">${attr(seatLabel(names, entry.unit.members))}</th>
+        <th scope="row">${attr(seatLabel(names, entry.body.members))}</th>
         <td class="num muted calc">${seatInt.format(entry.votes)} ÷ ${entry.over}</td>
         <td class="num strong">${seatFix(entry.measure)}</td>
         <td class="takes">${wins ? 'זוכה' : ''}</td>
@@ -291,6 +323,9 @@ function seatLeftoverStep(trace, names) {
       מספר המנדטים שבידיו <em>ועוד אחד</em> — כמה היה עולה לו כל מנדט אם יקבל
       עוד אחד. מי שהמספר הזה הוא הגדול ביותר אצלו זוכה, ואז מחשבים הכול מחדש.
       מנדט שמתווסף מוריד את המודד של הזוכה, ולכן גוף גדול אינו גורף את כולם.
+      ${!trace.pairs.length ? '' : `<strong>רק כאן</strong> נכנסים הסכמי
+      העודפים: זוג חותמות נחשב מעכשיו לגוף אחד, ומביא איתו גם את הקולות של
+      שתיהן וגם את המנדטים שכל אחת כבר זכתה בהם בסיבוב הראשון.`}
     </p>
     <div class="leftovers">${cards}</div>`,
   };
@@ -298,38 +333,40 @@ function seatLeftoverStep(trace, names) {
 
 function seatSplitStep(trace, names) {
   if (!trace.splits.length) return null;
-  const cards = trace.splits.map(({ unit, inner, inside }) => {
+  const cards = trace.splits.map(({ body, inner, innerRounds }) => {
+    const won = body.seats - body.entry;
+    // Only the seats the pair won together are at stake here; what each member
+    // brought in from the first round is already hers and is shown as such.
     const rows = inner.map((one) => {
-      const wins = inside.rounds.length && inside.rounds[0].winner === one;
-      return `<tr class="${wins ? 'wins' : ''}">
+      const takes = innerRounds.some((round) => round.winner === one);
+      const first = innerRounds[0]
+        && innerRounds[0].ranked.find((entry) => entry.body === one);
+      return `<tr class="${takes ? 'wins' : ''}">
         <th scope="row">${attr(seatName(names, one.members[0]))}</th>
-        <td class="num">${seatInt.format(one.votes)}</td>
-        <td class="num muted">${seatFix(one.votes / inside.quota, 3)}</td>
-        <td class="num strong">${one.base}${one.seats > one.base
-    ? ` <span class="plus">+${one.seats - one.base}</span>` : ''}</td>
+        <td class="num muted">${one.entry}</td>
+        <td class="num muted calc">${!first ? '—'
+    : `${seatInt.format(one.votes)} ÷ ${first.over}`}</td>
+        <td class="num strong">${!first ? '' : seatFix(first.measure)}</td>
+        <td class="num strong">${one.seats}</td>
       </tr>`;
     }).join('');
     return `<div class="leftover">
       <div class="leftover-head">
-        <strong>${attr(seatLabel(names, unit.members))}</strong>
-        <span>${unit.seats} מנדטים · מודד פנימי ${seatFix(inside.quota)}</span>
+        <strong>${attr(seatLabel(names, body.members))}</strong>
+        <span>${won === 1 ? 'מנדט אחד לחלוקה' : `${won} מנדטים לחלוקה`}</span>
       </div>
-      ${seatTable(['רשימה', 'קולות', 'חלקי המודד הפנימי', 'מנדטים'],
-    rows)}
-      ${!inside.rounds.length ? '' : `<p class="step-note">
-        העודף נפל ל<strong>${attr(seatLabel(names,
-    inside.rounds[0].winner.members))}</strong> —
-        ${seatFix(inside.rounds[0].ranked[0].measure)} מול
-        ${seatFix(inside.rounds[0].ranked[1].measure)}.</p>`}
+      ${seatTable(['רשימה', 'מהסיבוב הראשון', 'החישוב', 'המודד שלה', 'סה"כ'],
+    rows, 'split-table')}
     </div>`;
   }).join('');
   return {
     title: 'פיצול הזוגות',
     body: `
     <p class="step-text">
-      עכשיו כל זוג מחלק בין שני חבריו את מה שזכה בו — <strong>באותה שיטה
-      בדיוק</strong>. המודד הפנימי הוא קולות הזוג חלקי המנדטים שהזוג קיבל, וגם
-      כאן מנדט שנותר הולך למודד הגדול.
+      מה שזוג זכה בו יחד נחלק עכשיו בין שתי חברותיו — <strong>באותו כלל
+      בדיוק</strong>, סעיף 81(ד) שוב, רק שהפעם הוא מופעל בתוך הזוג. כל אחת
+      יוצאת למרוץ הזה ממספר המנדטים שלה מהסיבוב הראשון, ומי שהמודד שלה גבוה
+      יותר לוקחת את המנדט. המנדטים שכל אחת כבר זכתה בהם לבדה אינם על הפרק.
     </p>
     <div class="leftovers">${cards}</div>`,
   };

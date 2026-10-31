@@ -941,21 +941,10 @@ a { color: var(--accent); }
   vertical-align: baseline;
 }
 
-.pair-tag {
-  margin-inline-start: .45rem;
-  padding: .05rem .4rem;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: .68rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
 /* One card per seat still to be handed out, and one per pair being split. */
 .leftovers {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(370px, 1fr));
   gap: .9rem;
 }
 .leftover {
@@ -1026,6 +1015,11 @@ a { color: var(--accent); }
      not wrap, so the room comes out of the gutters instead. */
   .seat-table th,
   .seat-table td { padding: .45rem .35rem; }
+  /* On a phone these two have to give way, or the tables scroll sideways.
+     The pill is redundant beside a name that already reads "A + B", and the
+     division is recoverable from the two columns on either side of it. */
+  .split-table th:nth-child(3),
+  .split-table td:nth-child(3) { display: none; }
 }
 
 /* The seat a pair's leftover won, shown beside the whole-quota figure. */

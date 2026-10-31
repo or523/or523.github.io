@@ -1022,5 +1022,13 @@ a { color: var(--accent); }
   .split-table td:nth-child(3) { display: none; }
 }
 
+/* Measured against the fallback font these tables fit a 375px screen; with
+   Assistant loaded two of them are a few pixels over. The numbers must not
+   wrap, so the last of the room comes from the type. */
+@media (max-width: 420px) {
+  .seat-table { font-size: .79rem; }
+  .seat-table .chip.static { margin-inline-end: 4px; }
+}
+
 /* The seat a pair's leftover won, shown beside the whole-quota figure. */
 .seat-table .plus { color: #15803d; font-weight: 700; font-size: .85em; }
